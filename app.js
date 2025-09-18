@@ -1,117 +1,195 @@
-/* Neuroblast interactive grid — with global params + per-row controls + share links */
+/* Neuroblast interactive grid*/
 
-/* ---------- Default (paper) params ---------- */
-const DEFAULTS = {
-  // time
-  tEnd: 48, dt: 0.1,
-  // core volumes / exponents
-  nb_vol: 285.0, n: 3,
-  // GMC / thresholds / floors
-  k_max_GMC: 1/8,
-  V_thresh_NB: 1.25*285.0,              // 356.25
-  V_thresh_GMC: (285.0*1.25*0.2)*2,     // 142.5
-  V_floor_NB: 0.25*285.0,               // 71.25
-  V_floor_GMC: 0.25*(285.0*1.25*0.2),   // 17.8125
-  // rates
-  k_Neuron: 1/48,                       // ~0.0208333
-  g_GMC: (285.0*1.25*0.2)/9,            // 7.9166667
-  // WT calibration
-  k_star: 1/1.5,
-  // Model 2/4
-  V_thresh_base: 1.25*285.0,            // default same as V_thresh_NB
-  delta_thresh: 0.03*(1.25*285.0),      // 10.6875
-  V_thresh_min: 0.25*285.0,             // 71.25
-  // Model 5
-  K_self: 2.0,
-  beta_default: 4,
-  // Model 3/4 row params
-  m3_alpha: 3,
-  m4_alpha: 3,
-  m5_beta: 4
-};
-
-// genotypes (fixed; you can expose if you ever want)
+/* ---------------- Fixed genotypes ---------------- */
 const GENOS = [
-  ["WT", 0.0, 1.0],
+  ["WT",         0.0, 1.0],
   ["mud mutant", 0.15, 1.0],
-  ["nanobody", 0.15, 0.8]
+  ["nanobody",   0.15, 0.8],
 ];
-
 const COLORS = { NB:"#1b9e77", GMC:"#d95f02", Im:"#7570b3", Mat:"#e7298a" };
-
-/* ---------- DOM helpers ---------- */
 const qs  = (s,root=document)=>root.querySelector(s);
 const qsa = (s,root=document)=>Array.from(root.querySelectorAll(s));
 
-/* ---------- State ---------- */
-const state = { ...DEFAULTS };
+/* ---------------- Per-model defaults ----------------
+   Each model card will show and own exactly these fields.              */
+const DEFAULTS = {
+  // Shared-ish numerics
+  tEnd: 48, dt: 0.1,
+  // Paper constants
+  nb_vol: 285.0,
+  n: 3,
+  k_max_GMC: 1/8,
+  V_thresh_NB: 1.25*285.0,            // 356.25
+  V_thresh_GMC: (285.0*1.25*0.2)*2,   // 142.5
+  V_floor_NB: 0.25*285.0,             // 71.25
+  V_floor_GMC: 0.25*(285.0*1.25*0.2), // 17.8125
+  k_Neuron: 1/48,                      // ~0.0208333333
+  g_GMC: (285.0*1.25*0.2)/9,          // 7.9166667
+  k_star: 1/1.5,                      // ~0.6666666667
+  V_thresh_base: 1.25*285.0,          // 356.25
+  delta_thresh: 0.03*(1.25*285.0),    // 10.6875
+  V_thresh_min: 0.25*285.0,           // 71.25
+  K_self: 2.0,
+  alpha: 3,
+  beta: 4,
+};
 
-function readInputsIntoState(){
-  qsa('[data-key]').forEach(inp=>{
+// Model-specific parameter schema (key → [label, help/units])
+const MODEL_SCHEMAS = {
+  1: {
+    title: "Model 1 — static thresholds",
+    fields: {
+      tEnd: ["tEnd (h)", "simulation end time"],
+      dt: ["dt (h)", "step"],
+      nb_vol: ["nb_vol (V0)", "initial NB volume"],
+      n: ["n (–)", "Hill exponent"],
+      k_max_GMC: ["k_max_GMC (h⁻¹)", "GMC division max"],
+      V_thresh_NB: ["V_thresh_NB (vol)", "NB threshold"],
+      V_thresh_GMC: ["V_thresh_GMC (vol)", "GMC threshold"],
+      V_floor_NB: ["V_floor_NB (vol)", "NB floor"],
+      V_floor_GMC: ["V_floor_GMC (vol)", "GMC floor"],
+      k_Neuron: ["k_Neuron (h⁻¹)", "immature→mature"],
+      g_GMC: ["g_GMC (vol·h⁻¹)", "GMC vol growth"],
+      k_star: ["k_star (h⁻¹)", "target NB division @ V0"],
+    }
+  },
+  2: {
+    title: "Model 2 — sym pulls threshold",
+    fields: {
+      tEnd: ["tEnd (h)", ""], dt: ["dt (h)", ""],
+      nb_vol: ["nb_vol (V0)", ""], n:["n (–)",""],
+      k_max_GMC:["k_max_GMC (h⁻¹)",""], V_thresh_NB:["V_thresh_NB",""],
+      V_thresh_GMC:["V_thresh_GMC",""], V_floor_NB:["V_floor_NB",""],
+      V_floor_GMC:["V_floor_GMC",""], k_Neuron:["k_Neuron (h⁻¹)",""],
+      g_GMC:["g_GMC (vol·h⁻¹)",""], k_star:["k_star (h⁻¹)",""],
+      V_thresh_base:["V_thresh_base",""], delta_thresh:["delta_thresh (vol)","pull/Σsym"],
+      V_thresh_min:["V_thresh_min (vol)","lower bound"],
+    }
+  },
+  3: {
+    title: "Model 3 — vol-scaled growth",
+    fields: {
+      tEnd:["tEnd (h)",""], dt:["dt (h)",""],
+      nb_vol:["nb_vol (V0)","V_ref = V0"], n:["n (–)",""],
+      k_max_GMC:["k_max_GMC (h⁻¹)",""], V_thresh_NB:["V_thresh_NB",""],
+      V_thresh_GMC:["V_thresh_GMC",""], V_floor_NB:["V_floor_NB",""],
+      V_floor_GMC:["V_floor_GMC",""], k_Neuron:["k_Neuron (h⁻¹)",""],
+      g_GMC:["g_GMC (vol·h⁻¹)",""], k_star:["k_star (h⁻¹)",""],
+      alpha:["α (–)","growth exponent"],
+    }
+  },
+  4: {
+    title: "Model 4 — vol-scaled + sym-threshold",
+    fields: {
+      tEnd:["tEnd (h)",""], dt:["dt (h)",""],
+      nb_vol:["nb_vol (V0)","V_ref = V0"], n:["n (–)",""],
+      k_max_GMC:["k_max_GMC (h⁻¹)",""], V_thresh_GMC:["V_thresh_GMC",""],
+      V_floor_NB:["V_floor_NB",""], V_floor_GMC:["V_floor_GMC",""],
+      k_Neuron:["k_Neuron (h⁻¹)",""], g_GMC:["g_GMC (vol·h⁻¹)",""],
+      k_star:["k_star (h⁻¹)",""], alpha:["α (–)","growth exponent"],
+      V_thresh_base:["V_thresh_base",""], delta_thresh:["delta_thresh (vol)","pull/Σsym"],
+      V_thresh_min:["V_thresh_min (vol)","lower bound"],
+    }
+  },
+  5: {
+    title: "Model 5 — NB self-repression",
+    fields: {
+      tEnd:["tEnd (h)",""], dt:["dt (h)",""],
+      k_Neuron:["k_Neuron (h⁻¹)",""], k_max_GMC:["k_GMC (h⁻¹)","GMC division"],
+      k_star:["k_star (h⁻¹)","base NB division"], K_self:["K_self (cells)","repression scale"],
+      beta:["β (–)","division exponent"],
+    }
+  }
+};
+
+// Build per-model state from defaults
+const state = { 1:{}, 2:{}, 3:{}, 4:{}, 5:{} };
+for (const r of [1,2,3,4,5]) {
+  for (const k of Object.keys(MODEL_SCHEMAS[r].fields)) state[r][k] = DEFAULTS[k];
+}
+
+// UI — build model cards
+function buildControls(){
+  const host = qs('#controls');
+  host.innerHTML = '';
+  for (const r of [1,2,3,4,5]) {
+    const card = document.createElement('div'); card.className='card';
+    const h = document.createElement('h3'); h.textContent = MODEL_SCHEMAS[r].title; card.appendChild(h);
+
+    const fields = document.createElement('div'); fields.className='fields';
+    for (const [key,[label,help]] of Object.entries(MODEL_SCHEMAS[r].fields)) {
+      const box = document.createElement('div'); box.className='field';
+      const lab = document.createElement('label'); lab.textContent = help? `${label} — ${help}` : label;
+      const inp = document.createElement('input');
+      inp.type='number'; inp.step='0.0001'; inp.value = String(state[r][key]); inp.dataset.model=r; inp.dataset.key=key;
+      box.appendChild(lab); box.appendChild(inp); fields.appendChild(box);
+    }
+    card.appendChild(fields);
+
+    const row = document.createElement('div'); row.className='inline';
+    const run = document.createElement('button'); run.textContent='Run row'; run.dataset.run=r;
+    const share = document.createElement('button'); share.textContent='Share row'; share.className='secondary tiny'; share.dataset.share=r;
+    row.appendChild(run); row.appendChild(share); card.appendChild(row);
+    host.appendChild(card);
+  }
+}
+
+// read inputs → state[r]
+function readModelInputs(r){
+  qsa(`input[data-model="${r}"]`).forEach(inp=>{
+    const k = inp.dataset.key; const v = parseFloat(inp.value);
+    if (Number.isFinite(v)) state[r][k] = v;
+  });
+}
+function writeModelInputs(r){
+  qsa(`input[data-model="${r}"]`).forEach(inp=>{
     const k = inp.dataset.key;
-    const v = parseFloat(inp.value);
-    state[k] = Number.isFinite(v) ? v : state[k];
+    if (k in state[r]) inp.value = String(state[r][k]);
   });
 }
 
-function writeStateToInputs(){
-  qsa('[data-key]').forEach(inp=>{
-    const k = inp.dataset.key;
-    if (k in state) inp.value = String(state[k]);
-  });
-}
-
-/* ---------- Derived from globals ---------- */
-function derived(){
-  const V0 = state.nb_vol;
-  const core0 = Math.min(1, Math.pow(V0 / state.V_thresh_NB, state.n));
-  const k_max_NB = state.k_star / core0;
-  const g_NB_WT  = 0.2 * state.k_star * V0;
+// Derived per-model (k_max_NB & g_NB_WT) where needed
+function derive_kmax_gNB(modelParams){
+  const V0 = modelParams.nb_vol ?? DEFAULTS.nb_vol;
+  const n = modelParams.n ?? DEFAULTS.n;
+  const V_thresh_NB = (modelParams.V_thresh_NB ?? DEFAULTS.V_thresh_NB);
+  const k_star = modelParams.k_star ?? DEFAULTS.k_star;
+  const core0 = Math.min(1, Math.pow(V0 / V_thresh_NB, n));
+  const k_max_NB = k_star / core0;
+  const g_NB_WT = 0.2 * k_star * V0;
   return { V0, k_max_NB, g_NB_WT };
 }
 
-/* ---------- Integrator (RK2) ---------- */
-function integrate(rhs, y0, p){
-  const tEnd = state.tEnd, dt = state.dt;
-  const steps = Math.floor(tEnd/dt);
+/* ---------------- Integrator (RK2) ---------------- */
+function integrate(rhs, y0, p, tEnd, dt){
+  const steps = Math.max(1, Math.floor(tEnd/dt));
   const d = y0.length;
-  const Y = new Array(steps+1); const T = new Array(steps+1);
+  const T = new Array(steps+1), Y = new Array(steps+1);
   let y = y0.slice(), t = 0;
-  Y[0]=y.slice(); T[0]=0;
+  T[0]=0; Y[0]=y.slice();
   for(let i=1;i<=steps;i++){
     const k1 = rhs(t,y,p);
     const yMid = new Array(d);
     for(let j=0;j<d;j++) yMid[j] = y[j] + 0.5*dt*k1[j];
     const k2 = rhs(t+0.5*dt, yMid, p);
     for(let j=0;j<d;j++) y[j] = y[j] + dt*k2[j];
-    t += dt; Y[i]=y.slice(); T[i]=t;
+    t += dt; T[i]=t; Y[i]=y.slice();
   }
   return {t:T, y:Y};
 }
 
-/* ---------- Model RHS (ported) ---------- */
-function satpow(Vbar, Vth, kmax, n){
-  if (Vbar<=0 || Vth<=0) return 0;
-  const r = Math.pow(Vbar/Vth, n);
-  return (r>=1)? kmax : kmax*r;
-}
+/* ---------------- RHS definitions (ported) ---------------- */
+function satpow(Vbar, Vth, kmax, n){ if(Vbar<=0||Vth<=0) return 0; const r=Math.pow(Vbar/Vth,n); return r>=1?kmax:kmax*r; }
 
 // M1
 function rhsM1(t,y,p){
-  let [N_NB,V_NB,N_GMC,V_GMC,N_Im,V_Im,N_Mat,V_Mat] = y;
-  const {g_NB,g_GMC,k_Neuron,sym_frac,V_thresh_NB,V_thresh_GMC,k_max_NB,k_max_GMC,n,V_floor_NB,V_floor_GMC} = p;
-  const Vavg_NB  = N_NB>0? V_NB/N_NB : 0;
-  const Vavg_GMC = N_GMC>0? V_GMC/N_GMC : 0;
-  const Vavg_Im  = N_Im>0 ? V_Im/N_Im  : 0;
-
-  const k_NB  = (N_NB>0 && Vavg_NB>=V_floor_NB)?  satpow(Vavg_NB,V_thresh_NB,k_max_NB,n) : 0;
-  const k_GMC = (N_GMC>0 && Vavg_GMC>=V_floor_GMC)?satpow(Vavg_GMC,V_thresh_GMC,k_max_GMC,n) : 0;
-
-  const sym = p.sym_frac * k_NB * N_NB;
-  const asym= (1-p.sym_frac) * k_NB * N_NB;
-
-  return [
-    sym,
+  let [N_NB,V_NB,N_GMC,V_GMC,N_Im,V_Im,N_Mat,V_Mat]=y;
+  const {g_NB,g_GMC,k_Neuron,sym_frac,V_thresh_NB,V_thresh_GMC,k_max_NB,k_max_GMC,n,V_floor_NB,V_floor_GMC}=p;
+  const Vavg_NB  = N_NB>0?V_NB/N_NB:0, Vavg_GMC=N_GMC>0?V_GMC/N_GMC:0, Vavg_Im=N_Im>0?V_Im/N_Im:0;
+  const k_NB  = (N_NB>0 && Vavg_NB>=V_floor_NB)? satpow(Vavg_NB,V_thresh_NB,k_max_NB,n):0;
+  const k_GMC = (N_GMC>0 && Vavg_GMC>=V_floor_GMC)?satpow(Vavg_GMC,V_thresh_GMC,k_max_GMC,n):0;
+  const sym = p.sym_frac * k_NB * N_NB, asym = (1-p.sym_frac)*k_NB*N_NB;
+  return [ sym,
     g_NB*N_NB - 0.2*asym*(Vavg_NB||0),
     asym - k_GMC*N_GMC,
     g_GMC*N_GMC + 0.2*asym*(Vavg_NB||0) - k_GMC*N_GMC*(Vavg_GMC||0),
@@ -124,21 +202,14 @@ function rhsM1(t,y,p){
 
 // M2
 function rhsM2(t,y,p){
-  let [N_NB,V_NB,N_GMC,V_GMC,N_Im,V_Im,N_Mat,V_Mat,Vth_eff] = y;
-  const {g_NB_base,g_GMC,k_Neuron,sym_frac,V_thresh_base,V_thresh_GMC,k_max_NB,k_max_GMC,n,V_floor_NB,V_floor_GMC,delta_thresh,V_thresh_min} = p;
-  const Vavg_NB  = N_NB>0? V_NB/N_NB : 0;
-  const Vavg_GMC = N_GMC>0? V_GMC/N_GMC : 0;
-  const Vavg_Im  = N_Im>0 ? V_Im/N_Im  : 0;
-
+  let [N_NB,V_NB,N_GMC,V_GMC,N_Im,V_Im,N_Mat,V_Mat,Vth_eff]=y;
+  const {g_NB_base,g_GMC,k_Neuron,sym_frac,V_thresh_base,V_thresh_GMC,k_max_NB,k_max_GMC,n,V_floor_NB,V_floor_GMC,delta_thresh,V_thresh_min}=p;
+  const Vavg_NB=N_NB>0?V_NB/N_NB:0, Vavg_GMC=N_GMC>0?V_GMC/N_GMC:0, Vavg_Im=N_Im>0?V_Im/N_Im:0;
   const Vth_used = Math.max(Vth_eff, V_thresh_min);
-  const k_NB  = (N_NB>0 && Vavg_NB>=V_floor_NB)?  satpow(Vavg_NB,Vth_used,k_max_NB,n) : 0;
-  const k_GMC = (N_GMC>0 && Vavg_GMC>=V_floor_GMC)?satpow(Vavg_GMC,V_thresh_GMC,k_max_GMC,n) : 0;
-
-  const sym = sym_frac * k_NB * N_NB;
-  const asym= (1-sym_frac) * k_NB * N_NB;
-
-  return [
-    sym,
+  const k_NB  = (N_NB>0 && Vavg_NB>=V_floor_NB)? satpow(Vavg_NB,Vth_used,k_max_NB,n):0;
+  const k_GMC = (N_GMC>0 && Vavg_GMC>=V_floor_GMC)?satpow(Vavg_GMC,V_thresh_GMC,k_max_GMC,n):0;
+  const sym = sym_frac*k_NB*N_NB, asym=(1-sym_frac)*k_NB*N_NB;
+  return [ sym,
     g_NB_base*N_NB - 0.2*asym*(Vavg_NB||0),
     asym - k_GMC*N_GMC,
     g_GMC*N_GMC + 0.2*asym*(Vavg_NB||0) - k_GMC*N_GMC*(Vavg_GMC||0),
@@ -152,23 +223,15 @@ function rhsM2(t,y,p){
 
 // M3
 function rhsM3(t,y,p){
-  let [N_NB,V_NB,N_GMC,V_GMC,N_Im,V_Im,N_Mat,V_Mat] = y;
-  const {g_NB_base,g_GMC,k_Neuron,sym_frac,V_thresh_base,V_thresh_GMC,k_max_NB,k_max_GMC,n,V_floor_NB,V_ref,alpha_growth,V_floor_GMC} = p;
-  const Vavg_NB  = N_NB>0? V_NB/N_NB : 0;
-  const Vavg_GMC = N_GMC>0? V_GMC/N_GMC : 0;
-  const Vavg_Im  = N_Im>0 ? V_Im/N_Im  : 0;
-
-  const ratio    = (V_ref>0 && Vavg_NB>0)? (Vavg_NB/V_ref) : 1.0;
+  let [N_NB,V_NB,N_GMC,V_GMC,N_Im,V_Im,N_Mat,V_Mat]=y;
+  const {g_NB_base,g_GMC,k_Neuron,sym_frac,V_thresh_base,V_thresh_GMC,k_max_NB,k_max_GMC,n,V_floor_NB,V_ref,alpha_growth,V_floor_GMC}=p;
+  const Vavg_NB=N_NB>0?V_NB/N_NB:0, Vavg_GMC=N_GMC>0?V_GMC/N_GMC:0, Vavg_Im=N_Im>0?V_Im/N_Im:0;
+  const ratio=(V_ref>0&&Vavg_NB>0)?(Vavg_NB/V_ref):1.0;
   const g_NB_eff = g_NB_base * Math.pow(ratio, alpha_growth);
-
-  const k_NB  = (N_NB>0 && Vavg_NB>=V_floor_NB)?  satpow(Vavg_NB,V_thresh_base,k_max_NB,n) : 0;
-  const k_GMC = (N_GMC>0 && Vavg_GMC>=V_floor_GMC)?satpow(Vavg_GMC,V_thresh_GMC,k_max_GMC,n) : 0;
-
-  const sym = sym_frac * k_NB * N_NB;
-  const asym= (1-sym_frac) * k_NB * N_NB;
-
-  return [
-    sym,
+  const k_NB  = (N_NB>0 && Vavg_NB>=V_floor_NB)? satpow(Vavg_NB,V_thresh_base,k_max_NB,n):0;
+  const k_GMC = (N_GMC>0 && Vavg_GMC>=V_floor_GMC)?satpow(Vavg_GMC,V_thresh_GMC,k_max_GMC,n):0;
+  const sym = sym_frac*k_NB*N_NB, asym=(1-sym_frac)*k_NB*N_NB;
+  return [ sym,
     g_NB_eff*N_NB - 0.2*asym*(Vavg_NB||0),
     asym - k_GMC*N_GMC,
     g_GMC*N_GMC + 0.2*asym*(Vavg_NB||0) - k_GMC*N_GMC*(Vavg_GMC||0),
@@ -181,27 +244,17 @@ function rhsM3(t,y,p){
 
 // M4
 function rhsM4(t,y,p){
-  let [N_NB,V_NB,N_GMC,V_GMC,N_Im,V_Im,N_Mat,V_Mat,S_sym] = y;
-  const {g_NB_base,g_GMC,k_Neuron,sym_frac,V_thresh_base,V_thresh_GMC,k_max_NB,k_max_GMC,n,V_floor_NB,V_ref,alpha_growth,V_floor_GMC,delta_thresh,V_thresh_min} = p;
-
-  const Vavg_NB  = N_NB>0? V_NB/N_NB : 0;
-  const Vavg_GMC = N_GMC>0? V_GMC/N_GMC : 0;
-  const Vavg_Im  = N_Im>0 ? V_Im/N_Im  : 0;
-
-  const ratio    = (V_ref>0 && Vavg_NB>0)? (Vavg_NB/V_ref) : 1.0;
+  let [N_NB,V_NB,N_GMC,V_GMC,N_Im,V_Im,N_Mat,V_Mat,S_sym]=y;
+  const {g_NB_base,g_GMC,k_Neuron,sym_frac,V_thresh_base,V_thresh_GMC,k_max_NB,k_max_GMC,n,V_floor_NB,V_ref,alpha_growth,V_floor_GMC,delta_thresh,V_thresh_min}=p;
+  const Vavg_NB=N_NB>0?V_NB/N_NB:0, Vavg_GMC=N_GMC>0?V_GMC/N_GMC:0, Vavg_Im=N_Im>0?V_Im/N_Im:0;
+  const ratio=(V_ref>0&&Vavg_NB>0)?(Vavg_NB/V_ref):1.0;
   const g_NB_eff = g_NB_base * Math.pow(ratio, alpha_growth);
-
   let V_thresh_eff = V_thresh_base - delta_thresh * Math.max(S_sym, 0);
-  if (V_thresh_min != null) V_thresh_eff = Math.max(V_thresh_eff, V_thresh_min);
-
-  const k_NB  = (N_NB>0 && Vavg_NB>=V_floor_NB)?  satpow(Vavg_NB,V_thresh_eff,k_max_NB,n) : 0;
-  const k_GMC = (N_GMC>0 && Vavg_GMC>=V_floor_GMC)?satpow(Vavg_GMC,V_thresh_GMC,k_max_GMC,n) : 0;
-
-  const sym = sym_frac * k_NB * N_NB;
-  const asym= (1-sym_frac) * k_NB * N_NB;
-
-  return [
-    sym,
+  if (V_thresh_min!=null) V_thresh_eff = Math.max(V_thresh_eff, V_thresh_min);
+  const k_NB  = (N_NB>0 && Vavg_NB>=V_floor_NB)? satpow(Vavg_NB,V_thresh_eff,k_max_NB,n):0;
+  const k_GMC = (N_GMC>0 && Vavg_GMC>=V_floor_GMC)?satpow(Vavg_GMC,V_thresh_GMC,k_max_GMC,n):0;
+  const sym = sym_frac*k_NB*N_NB, asym=(1-sym_frac)*k_NB*N_NB;
+  return [ sym,
     g_NB_eff*N_NB - 0.2*asym*(Vavg_NB||0),
     asym - k_GMC*N_GMC,
     g_GMC*N_GMC + 0.2*asym*(Vavg_NB||0) - k_GMC*N_GMC*(Vavg_GMC||0),
@@ -215,265 +268,228 @@ function rhsM4(t,y,p){
 
 // M5
 function rhsM5(t,y,p){
-  let [N_NB,N_GMC,N_Im,N_Mat] = y;
-  const {k_GMC,k_Neuron,K,n_nb,sym,k_NB_max} = p;
-  const Np = Math.max(N_NB,0);
-  const Kp = Math.max(K,1e-12);
-  const nn = Math.max(n_nb,1e-12);
+  let [N_NB,N_GMC,N_Im,N_Mat]=y;
+  const {k_GMC,k_Neuron,K,n_nb,sym,k_NB_max}=p;
+  const Np=Math.max(N_NB,0), Kp=Math.max(K,1e-12), nn=Math.max(n_nb,1e-12);
   const k_NB_eff = k_NB_max * (Math.pow(Kp,nn)/(Math.pow(Kp,nn)+Math.pow(Np,nn)));
-  const symd  = sym * k_NB_eff * N_NB;
-  const asymd = (1 - sym) * k_NB_eff * N_NB;
-  return [
-    symd,
-    asymd - k_GMC*N_GMC,
-    2*k_GMC*N_GMC - k_Neuron*N_Im,
-    k_Neuron*N_Im
-  ];
+  const symd=sym*k_NB_eff*N_NB, asymd=(1-sym)*k_NB_eff*N_NB;
+  return [ symd, asymd - k_GMC*N_GMC, 2*k_GMC*N_GMC - k_Neuron*N_Im, k_Neuron*N_Im ];
 }
 
-/* ---------- Solve wrappers (use GLOBALS) ---------- */
-function solveModel1({sym_frac, g_scale}){
-  const {V0,k_max_NB,g_NB_WT} = derived();
-  const p = {
-    g_NB: g_NB_WT * g_scale,
-    g_GMC: state.g_GMC, k_Neuron: state.k_Neuron, sym_frac,
-    V_thresh_NB: state.V_thresh_NB, V_thresh_GMC: state.V_thresh_GMC,
-    k_max_NB, k_max_GMC: state.k_max_GMC, n: state.n,
-    V_floor_NB: state.V_floor_NB, V_floor_GMC: state.V_floor_GMC
-  };
-  const y0 = [1,V0, 0,0, 0,0, 0,0];
-  return integrate(rhsM1, y0, p);
+/* ---------------- Solve wrappers (each uses its own model params) ---------------- */
+function solveRow(rowIdx, geno){
+  const [gname, sym_frac, g_scale] = geno;
+  const p = state[rowIdx]; // per-model params
+  if (rowIdx===1){
+    const {V0,k_max_NB,g_NB_WT} = derive_kmax_gNB(p);
+    const args = {
+      g_NB: g_NB_WT * g_scale, g_GMC: p.g_GMC, k_Neuron: p.k_Neuron, sym_frac,
+      V_thresh_NB: p.V_thresh_NB, V_thresh_GMC: p.V_thresh_GMC,
+      k_max_NB, k_max_GMC: p.k_max_GMC, n: p.n, V_floor_NB: p.V_floor_NB, V_floor_GMC: p.V_floor_GMC
+    };
+    const y0=[1,V0, 0,0, 0,0, 0,0];
+    return integrate(rhsM1,y0,args,p.tEnd,p.dt);
+  }
+  if (rowIdx===2){
+    const {V0,k_max_NB,g_NB_WT} = derive_kmax_gNB(p);
+    const args = {
+      g_NB_base: g_NB_WT * g_scale, g_GMC:p.g_GMC, k_Neuron:p.k_Neuron, sym_frac,
+      V_thresh_base:p.V_thresh_base, V_thresh_GMC:p.V_thresh_GMC,
+      k_max_NB, k_max_GMC:p.k_max_GMC, n:p.n,
+      V_floor_NB:p.V_floor_NB, V_floor_GMC:p.V_floor_GMC,
+      delta_thresh:p.delta_thresh, V_thresh_min:p.V_thresh_min
+    };
+    const y0=[1,V0, 0,0, 0,0, 0,0, p.V_thresh_base];
+    return integrate(rhsM2,y0,args,p.tEnd,p.dt);
+  }
+  if (rowIdx===3){
+    const {V0,k_max_NB,g_NB_WT} = derive_kmax_gNB(p);
+    const args = {
+      g_NB_base:g_NB_WT*g_scale, g_GMC:p.g_GMC, k_Neuron:p.k_Neuron, sym_frac,
+      V_thresh_base:p.V_thresh_NB, V_thresh_GMC:p.V_thresh_GMC,
+      k_max_NB, k_max_GMC:p.k_max_GMC, n:p.n,
+      V_floor_NB:p.V_floor_NB, V_ref:V0, alpha_growth:p.alpha, V_floor_GMC:p.V_floor_GMC
+    };
+    const y0=[1,V0, 0,0, 0,0, 0,0];
+    return integrate(rhsM3,y0,args,p.tEnd,p.dt);
+  }
+  if (rowIdx===4){
+    const {V0,k_max_NB,g_NB_WT} = derive_kmax_gNB(p);
+    const args = {
+      g_NB_base:g_NB_WT*g_scale, g_GMC:p.g_GMC, k_Neuron:p.k_Neuron, sym_frac,
+      V_thresh_base:p.V_thresh_base, V_thresh_GMC:p.V_thresh_GMC,
+      k_max_NB, k_max_GMC:p.k_max_GMC, n:p.n,
+      V_floor_NB:p.V_floor_NB, V_ref:V0, alpha_growth:p.alpha, V_floor_GMC:p.V_floor_GMC,
+      delta_thresh:p.delta_thresh, V_thresh_min:p.V_thresh_min
+    };
+    const y0=[1,V0, 0,0, 0,0, 0,0, 0];
+    return integrate(rhsM4,y0,args,p.tEnd,p.dt);
+  }
+  if (rowIdx===5){
+    const k_NB_max = p.k_star * ((Math.pow(p.K_self, p.beta) + 1) / Math.pow(p.K_self, p.beta));
+    const args = { k_GMC:p.k_max_GMC, k_Neuron:p.k_Neuron, K:p.K_self, n_nb:p.beta, sym:sym_frac, k_NB_max };
+    const y0=[1,0,0,0];
+    return integrate(rhsM5,y0,args,p.tEnd,p.dt);
+  }
 }
 
-function solveModel2({sym_frac, g_scale}){
-  const {V0,k_max_NB,g_NB_WT} = derived();
-  const p = {
-    g_NB_base: g_NB_WT * g_scale,
-    g_GMC: state.g_GMC, k_Neuron: state.k_Neuron, sym_frac,
-    V_thresh_base: state.V_thresh_base, V_thresh_GMC: state.V_thresh_GMC,
-    k_max_NB, k_max_GMC: state.k_max_GMC, n: state.n,
-    V_floor_NB: state.V_floor_NB, V_floor_GMC: state.V_floor_GMC,
-    delta_thresh: state.delta_thresh, V_thresh_min: state.V_thresh_min
-  };
-  const y0 = [1,V0, 0,0, 0,0, 0,0, state.V_thresh_base];
-  return integrate(rhsM2, y0, p);
-}
-
-function solveModel3({alpha, sym_frac, g_scale}){
-  const {V0,k_max_NB,g_NB_WT} = derived();
-  const p = {
-    g_NB_base: g_NB_WT * g_scale,
-    g_GMC: state.g_GMC, k_Neuron: state.k_Neuron, sym_frac,
-    V_thresh_base: state.V_thresh_NB, V_thresh_GMC: state.V_thresh_GMC,
-    k_max_NB, k_max_GMC: state.k_max_GMC, n: state.n,
-    V_floor_NB: state.V_floor_NB, V_ref: V0, alpha_growth: alpha, V_floor_GMC: state.V_floor_GMC
-  };
-  const y0 = [1,V0, 0,0, 0,0, 0,0];
-  return integrate(rhsM3, y0, p);
-}
-
-function solveModel4({alpha, sym_frac, g_scale}){
-  const {V0,k_max_NB,g_NB_WT} = derived();
-  const p = {
-    g_NB_base: g_NB_WT * g_scale,
-    g_GMC: state.g_GMC, k_Neuron: state.k_Neuron, sym_frac,
-    V_thresh_base: state.V_thresh_base, V_thresh_GMC: state.V_thresh_GMC,
-    k_max_NB, k_max_GMC: state.k_max_GMC, n: state.n,
-    V_floor_NB: state.V_floor_NB, V_ref: V0, alpha_growth: alpha, V_floor_GMC: state.V_floor_GMC,
-    delta_thresh: state.delta_thresh, V_thresh_min: state.V_thresh_min
-  };
-  const y0 = [1,V0, 0,0, 0,0, 0,0, 0]; // S_sym=0
-  return integrate(rhsM4, y0, p);
-}
-
-function solveModel5({beta, sym_frac}){
-  const {k_max_NB} = derived(); // not used; keep pattern
-  const k_NB_max = state.k_star * ((Math.pow(state.K_self, beta) + 1) / Math.pow(state.K_self, beta));
-  const p = {
-    k_GMC: state.k_max_GMC, k_Neuron: state.k_Neuron, K: state.K_self, n_nb: beta, sym: sym_frac,
-    k_NB_max
-  };
-  const y0 = [1,0,0,0];
-  return integrate(rhsM5, y0, p);
-}
-
-/* ---------- SVG plotting ---------- */
-function createGrid(){
-  const grid = qs("#grid"); grid.innerHTML = "";
-  const rowNames = ["Model 1","Model 2","Model 3","Model 4","Model 5"];
-  for(let r=0;r<5;r++){
-    for(let c=0;c<3;c++){
-      const cell = document.createElement("div");
-      cell.className = "cell";
-      cell.dataset.row = r+1; cell.dataset.col = c+1;
-      const h = document.createElement("h3");
-      h.textContent = rowNames[r] + (c===0 ? " • "+GENOS[c][0] : "");
+/* ---------------- SVG plotting ---------------- */
+function ensureGrid(){
+  const grid = qs('#grid'); grid.innerHTML = '';
+  const names = ["Model 1","Model 2","Model 3","Model 4","Model 5"];
+  for (let r=1;r<=5;r++){
+    for (let c=1;c<=3;c++){
+      const cell = document.createElement('div'); cell.className='cell';
+      cell.dataset.row=r; cell.dataset.col=c;
+      const h = document.createElement('h3');
+      h.textContent = `${names[r-1]} • ${GENOS[c-1][0]}`;
       cell.appendChild(h);
       const svg = document.createElementNS("http://www.w3.org/2000/svg","svg");
       svg.setAttribute("viewBox","0 0 600 360");
-      svg.innerHTML = `<rect x="0" y="0" width="600" height="360" fill="transparent"/>
-        <g class="axes"></g><g class="series"></g><g class="endlabels"></g>`;
+      svg.innerHTML = `<g class="axes"></g><g class="series"></g><g class="endlabels"></g>`;
       cell.appendChild(svg);
       grid.appendChild(cell);
     }
   }
 }
 
-function plotRow(rowIdx){
-  readInputsIntoState();
-  const alpha3 = state.m3_alpha, alpha4 = state.m4_alpha, beta5 = state.m5_beta;
-  for(let c=0;c<3;c++){
-    const cell = qs(`.cell[data-row="${rowIdx}"][data-col="${c+1}"]`);
-    const svg = qs("svg", cell);
-    const gAxes = qs(".axes", svg);
-    const gSeries = qs(".series", svg);
-    const gLabels = qs(".endlabels", svg);
-    gAxes.innerHTML = ""; gSeries.innerHTML = ""; gLabels.innerHTML = "";
+function plotRow(r){
+  // sync inputs -> state
+  readModelInputs(r);
+  for (let c=1;c<=3;c++){
+    const cell = qs(`.cell[data-row="${r}"][data-col="${c}"]`);
+    const svg = qs('svg', cell);
+    const gAxes=qs('.axes',svg), gSeries=qs('.series',svg), gLabels=qs('.endlabels',svg);
+    gAxes.innerHTML=''; gSeries.innerHTML=''; gLabels.innerHTML='';
 
-    const [, sym, scale] = GENOS[c];
-    let sol;
-    if (rowIdx===1) sol = solveModel1({sym_frac:sym, g_scale:scale});
-    if (rowIdx===2) sol = solveModel2({sym_frac:sym, g_scale:scale});
-    if (rowIdx===3) sol = solveModel3({alpha:alpha3, sym_frac:sym, g_scale:scale});
-    if (rowIdx===4) sol = solveModel4({alpha:alpha4, sym_frac:sym, g_scale:scale});
-    if (rowIdx===5) sol = solveModel5({beta:beta5, sym_frac:sym});
-
+    const sol = solveRow(r, GENOS[c-1]);
     const t = sol.t;
-    const NB=[], GMC=[], Im=[], Mat=[];
-    for(let i=0;i<t.length;i++){
+    const NB=[],GMC=[],Im=[],Mat=[];
+    for (let i=0;i<t.length;i++){
       const y = sol.y[i];
-      if (rowIdx===5){ NB.push(y[0]); GMC.push(y[1]); Im.push(y[2]); Mat.push(y[3]); }
-      else           { NB.push(y[0]); GMC.push(y[2]); Im.push(y[4]); Mat.push(y[6]); }
+      if (r===5){ NB.push(y[0]); GMC.push(y[1]); Im.push(y[2]); Mat.push(y[3]); }
+      else      { NB.push(y[0]); GMC.push(y[2]); Im.push(y[4]); Mat.push(y[6]); }
     }
 
-    // scales
-    const W=600,H=360, padL=48,padR=20,padT=20,padB=36;
+    // layout + scales
+    const W=600,H=360, padL=48,padR=24,padT=18,padB=32;
     const x0=padL, x1=W-padR, y0=padT, y1=H-padB;
-    const tx = (x)=> x0 + (x/state.tEnd)*(x1-x0);
+    const x = v => x0 + (v/state[r].tEnd)*(x1-x0);
     const maxY = Math.max(1, ...NB, ...GMC, ...Im, ...Mat);
-    const ty = (y)=> y1 - (y/maxY)*(y1-y0);
+    const y = v => y1 - (v/maxY)*(y1-y0);
 
     // axes
-    const axisCol = "#32405e";
-    const tickCol = "#9aa4b2";
-    const xAxis = `<line x1="${x0}" y1="${y1}" x2="${x1}" y2="${y1}" stroke="${axisCol}" stroke-width="1"/>`;
-    const yAxis = `<line x1="${x0}" y1="${y0}" x2="${x0}" y2="${y1}" stroke="${axisCol}" stroke-width="1"/>`;
-    const xTicks = [0,12,24,36,48].map(v=>{
-      const x=tx(v); return `
-      <line x1="${x}" y1="${y1}" x2="${x}" y2="${y1+5}" stroke="${axisCol}"/>
-      <text x="${x}" y="${y1+18}" fill="${tickCol}" font-size="11" text-anchor="middle">${v}</text>`;
-    }).join("");
-    const yTicks = [0, Math.round(maxY*0.33), Math.round(maxY*0.66), Math.round(maxY)].map(v=>{
-      const y=ty(v); return `
-      <line x1="${x0-5}" y1="${y}" x2="${x0}" y2="${y}" stroke="${axisCol}"/>
-      <text x="${x0-8}" y="${y+4}" fill="${tickCol}" font-size="11" text-anchor="end">${v}</text>`;
-    }).join("");
-    gAxes.innerHTML = xAxis + yAxis + xTicks + yTicks;
-
-    // series (polyline) — thicker lines
-    const lw = 2.8;
-    const sw = (arr)=> arr.map((v,i)=>`${tx(t[i])},${ty(v)}`).join(" ");
-    gSeries.innerHTML = `
-      <polyline fill="none" stroke="${COLORS.NB}"  stroke-width="${lw}" stroke-linejoin="round" points="${sw(NB)}"/>
-      <polyline fill="none" stroke="${COLORS.GMC}" stroke-width="${lw}" stroke-linejoin="round" points="${sw(GMC)}"/>
-      <polyline fill="none" stroke="${COLORS.Im}"  stroke-width="${lw}" stroke-linejoin="round" points="${sw(Im)}"/>
-      <polyline fill="none" stroke="${COLORS.Mat}" stroke-width="${lw}" stroke-linejoin="round" points="${sw(Mat)}"/>
+    const axis="#32405e", tick="#9aa4b2";
+    gAxes.innerHTML = `
+      <line x1="${x0}" y1="${y1}" x2="${x1}" y2="${y1}" stroke="${axis}" stroke-width="1"/>
+      <line x1="${x0}" y1="${y0}" x2="${x0}" y2="${y1}" stroke="${axis}" stroke-width="1"/>
+      ${[0,12,24,36,48].map(v=>`
+        <line x1="${x(v)}" y1="${y1}" x2="${x(v)}" y2="${y1+5}" stroke="${axis}"/>
+        <text x="${x(v)}" y="${y1+18}" fill="${tick}" font-size="11" text-anchor="middle">${v}</text>`).join('')}
+      ${[0, Math.round(maxY*0.33), Math.round(maxY*0.66), Math.round(maxY)].map(v=>`
+        <line x1="${x0-5}" y1="${y(v)}" x2="${x0}" y2="${y(v)}" stroke="${axis}"/>
+        <text x="${x0-8}" y="${y(v)+4}" fill="${tick}" font-size="11" text-anchor="end">${v}</text>`).join('')}
     `;
 
-    // end labels — thicker, more visible strokes
-    const labels = [
+    // series
+    const lw=3.2;
+    const pts = arr => arr.map((v,i)=>`${x(t[i])},${y(v)}`).join(' ');
+    gSeries.innerHTML = `
+      <polyline fill="none" stroke="${COLORS.NB}"  stroke-width="${lw}" stroke-linejoin="round" points="${pts(NB)}"/>
+      <polyline fill="none" stroke="${COLORS.GMC}" stroke-width="${lw}" stroke-linejoin="round" points="${pts(GMC)}"/>
+      <polyline fill="none" stroke="${COLORS.Im}"  stroke-width="${lw}" stroke-linejoin="round" points="${pts(Im)}"/>
+      <polyline fill="none" stroke="${COLORS.Mat}" stroke-width="${lw}" stroke-linejoin="round" points="${pts(Mat)}"/>
+    `;
+
+    // end labels (clear color coding)
+    const ends = [
       ["NB",  Math.round(NB[NB.length-1])],
       ["GMC", Math.round(GMC[GMC.length-1])],
       ["Im",  Math.round(Im[Im.length-1])],
       ["Mat", Math.round(Mat[Mat.length-1])]
-    ];
-    const desired = labels.map(([name,_],i)=>({
-      name,
-      y: ty((name==="NB"?NB: name==="GMC"?GMC: name==="Im"?Im:Mat)[t.length-1]) - 2
-    })).sort((a,b)=>a.y-b.y);
-
-    const h = 24; const w2 = 34; // canonical for ≤2 digits
-    for(let i=1;i<desired.length;i++){
-      if (desired[i].y - desired[i-1].y < h+6) desired[i].y = desired[i-1].y + h+6;
+    ].map(([name,val])=>({name,val, y:y(
+      name==="NB"?NB[NB.length-1]: name==="GMC"?GMC[GMC.length-1]: name==="Im"?Im[Im.length-1]:Mat[Mat.length-1]
+    ) - 2}));
+    ends.sort((a,b)=>a.y-b.y);
+    const boxH=26, boxW2=36, right=x1-6;
+    for (let i=1;i<ends.length;i++){
+      if (ends[i].y - ends[i-1].y < boxH+6) ends[i].y = ends[i-1].y + boxH+6;
     }
-    const xr = x1 - 6;
-    const labelEls = desired.map(d=>{
-      const val = labels.find(L=>L[0]===d.name)[1];
-      const s = String(val);
-      const w = (s.length<=2)? w2 : (10 + 10*s.length);
-      const x = xr - w; const y = d.y - h/2;
-      const color = COLORS[d.name];
-      // stroke thicker + subtle tinted background for visibility
+    gLabels.innerHTML = ends.map(e=>{
+      const txt = String(e.val);
+      const w = (txt.length<=2)? boxW2 : (12 + 10*txt.length);
+      const xL = right - w, yT = e.y - boxH/2;
+      const col = COLORS[e.name];
       return `
-        <rect x="${x}" y="${y}" width="${w}" height="${h}" fill="white" stroke="${color}"
-              stroke-width="2.2" rx="6" ry="6"/>
-        <text x="${x+w/2}" y="${y+h/2+4}" fill="#0b1020"
+        <rect x="${xL}" y="${yT}" width="${w}" height="${boxH}" fill="white"
+              stroke="${col}" stroke-width="2.4" rx="7" ry="7"/>
+        <text x="${xL+w/2}" y="${yT+boxH/2+4}" fill="#0b1020"
               font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace"
-              font-size="13" text-anchor="middle">${s}</text>`;
-    }).join("");
-    gLabels.innerHTML = labelEls;
+              font-size="13" text-anchor="middle">${txt}</text>`;
+    }).join('');
   }
 }
 
-/* ---------- Grid + buttons + sharing ---------- */
-function createGrid(){
-  const grid = qs("#grid"); grid.innerHTML = "";
-  const rowNames = ["Model 1","Model 2","Model 3","Model 4","Model 5"];
-  for(let r=0;r<5;r++){
-    for(let c=0;c<3;c++){
-      const cell = document.createElement("div");
-      cell.className="cell"; cell.dataset.row=r+1; cell.dataset.col=c+1;
-      const h = document.createElement("h3");
-      h.textContent = rowNames[r] + (c===0? " • "+GENOS[c][0] : "");
-      cell.appendChild(h);
-      const svg = document.createElementNS("http://www.w3.org/2000/svg","svg");
-      svg.setAttribute("viewBox","0 0 600 360");
-      svg.innerHTML = `<rect x="0" y="0" width="600" height="360" fill="transparent"/>
-        <g class="axes"></g><g class="series"></g><g class="endlabels"></g>`;
-      cell.appendChild(svg);
-      grid.appendChild(cell);
+/* ---------------- Build UI, grid, and wire events ---------------- */
+function createGrid(){ // build empty grid
+  const grid = qs('#grid'); grid.innerHTML='';
+  const names=["Model 1","Model 2","Model 3","Model 4","Model 5"];
+  for (let r=1;r<=5;r++){
+    for (let c=1;c<=3;c++){
+      const cell=document.createElement('div'); cell.className='cell'; cell.dataset.row=r; cell.dataset.col=c;
+      const h=document.createElement('h3'); h.textContent=`${names[r-1]} • ${GENOS[c-1][0]}`; cell.appendChild(h);
+      const svg=document.createElementNS("http://www.w3.org/2000/svg","svg"); svg.setAttribute("viewBox","0 0 600 360");
+      svg.innerHTML=`<g class="axes"></g><g class="series"></g><g class="endlabels"></g>`;
+      cell.appendChild(svg); grid.appendChild(cell);
     }
   }
 }
 
-/* Share helpers */
 function shareAll(){
-  readInputsIntoState();
-  const params = new URLSearchParams();
-  Object.entries(state).forEach(([k,v])=> params.set(k, String(v)));
-  const url = `${location.origin}${location.pathname}?${params.toString()}`;
+  const sp = new URLSearchParams();
+  for (const r of [1,2,3,4,5]) {
+    readModelInputs(r);
+    Object.entries(state[r]).forEach(([k,v])=> sp.set(`m${r}_${k}`, String(v)));
+  }
+  const url = `${location.origin}${location.pathname}?${sp.toString()}`;
   navigator.clipboard?.writeText(url);
   alert("Shareable link copied to clipboard.");
 }
-
 function shareRow(r){
-  readInputsIntoState();
-  const params = new URLSearchParams();
-  // include ALL globals (so the row reproduces the same numerics)
-  Object.entries(state).forEach(([k,v])=> params.set(k, String(v)));
-  params.set('row', String(r));
-  const url = `${location.origin}${location.pathname}?${params.toString()}`;
+  readModelInputs(r);
+  const sp = new URLSearchParams();
+  Object.entries(state[r]).forEach(([k,v])=> sp.set(`m${r}_${k}`, String(v)));
+  sp.set('row', String(r));
+  const url = `${location.origin}${location.pathname}?${sp.toString()}`;
   navigator.clipboard?.writeText(url);
-  alert(`Shareable link for Model ${r} copied.`);
+  alert(`Link for Model ${r} copied.`);
 }
-
 function loadFromURL(){
   const u = new URL(location.href);
-  u.searchParams.forEach((v,k)=>{ if (k in state) state[k] = parseFloat(v); });
-  writeStateToInputs();
-  for (let r=1;r<=5;r++) plotRow(r);
+  for (const [k,v] of u.searchParams.entries()){
+    const m = k.match(/^m([1-5])_(.+)$/);
+    if (m){ const r=+m[1], key=m[2]; const num=parseFloat(v); if (!Number.isNaN(num)) state[r][key]=num; }
+  }
+  // write back into inputs
+  for (const r of [1,2,3,4,5]) writeModelInputs(r);
+  // auto-run all rows once
+  for (const r of [1,2,3,4,5]) plotRow(r);
 }
 
-/* ---------- Boot ---------- */
+/* ---------------- Boot ---------------- */
+buildControls();
 createGrid();
-writeStateToInputs();
-loadFromURL();
+for (const r of [1,2,3,4,5]) plotRow(r);
 
-qs('#reset').addEventListener('click', ()=>{
-  Object.assign(state, { ...DEFAULTS });
-  writeStateToInputs();
-  for (let r=1;r<=5;r++) plotRow(r);
+qs('#resetAll').addEventListener('click', ()=>{
+  for (const r of [1,2,3,4,5]) {
+    for (const k of Object.keys(MODEL_SCHEMAS[r].fields)) state[r][k] = DEFAULTS[k];
+    writeModelInputs(r);
+    plotRow(r);
+  }
 });
-qsa('[data-run]').forEach(b=> b.addEventListener('click', ()=> plotRow(+b.dataset.run)));
-qsa('[data-share]').forEach(b=> b.addEventListener('click', ()=> shareRow(+b.dataset.share)));
+qsa('button[data-run]').forEach(b=> b.addEventListener('click', ()=> plotRow(+b.dataset.run)));
+qsa('button[data-share]').forEach(b=> b.addEventListener('click', ()=> shareRow(+b.dataset.share)));
 qs('#shareAll').addEventListener('click', shareAll);
+
+loadFromURL();
