@@ -64,70 +64,88 @@ const MODEL_SCHEMAS = {
       tEnd: ["tEnd (h)", "simulation end time"],
       k_NB: ["k_NB (h⁻¹)", "neuroblast division rate"],
       k_GMC: ["k_GMC (h⁻¹)", "GMC division rate"],
-      k_Neuron: ["k_Neuron (h⁻¹)", "immature→mature"],
+      k_Neuron: ["k_Neuron (h⁻¹)", "Im→Mat neuron maturation rate"],
     },
   },
   2: {
     title: "Model 1 — volume-activated division (static thresholds)",
     fields: {
       tEnd: ["tEnd (h)", ""],
-      nb_vol: ["nb_vol (μM³)", "initial/target NB volume"],
-      n: ["n (unitless)", "sat-power exponent"],
-      k_max_GMC: ["k_max_GMC (h⁻¹)", "max GMC division"],
+      nb_vol: ["nb_vol (μM³)", "initial NB volume (V0)"],
+      n: ["n (–)", "sat-power exponent"],
+      k_max_GMC: ["k_max_GMC (h⁻¹)", "max GMC division rate"],
       V_thresh_NB: ["V_thresh_NB (μM³)", "NB division threshold"],
       V_thresh_GMC: ["V_thresh_GMC (μM³)", "GMC division threshold"],
       V_floor_NB: ["V_floor_NB (μM³)", "NB min vol for division"],
       V_floor_GMC: ["V_floor_GMC (μM³)", "GMC min vol for division"],
-      k_Neuron: ["k_Neuron (h⁻¹)", "Im → Mat maturation"],
-      g_GMC: ["g_GMC (μM³·h⁻¹)", "GMC growth"],
-      k_star: ["k_star (h⁻¹)", "Rate of WT NB division @ V0"],
+      k_Neuron: ["k_Neuron (h⁻¹)", "Im→Mat neuron maturation rate"],
+      g_GMC: ["g_GMC (μM³·h⁻¹)", "GMC growth rate"],
+      k_star: ["k_star (h⁻¹)", "WT NB division rate @ V0"],
     },
   },
   3: {
-    title: "Model 3 — vol-scaled growth",
+    title: "Model 2 — sym-division–pulled NB threshold (no recovery)",
     fields: {
       tEnd: ["tEnd (h)", ""],
-      nb_vol: ["nb_vol (V0)", "V_ref = V0"],
-      n: ["n (–)", ""],
-      k_max_GMC: ["k_max_GMC (h⁻¹)", ""],
-      V_thresh_NB: ["V_thresh_NB", ""],
-      V_thresh_GMC: ["V_thresh_GMC", ""],
-      V_floor_NB: ["V_floor_NB", ""],
-      V_floor_GMC: ["V_floor_GMC", ""],
-      k_Neuron: ["k_Neuron (h⁻¹)", ""],
-      g_GMC: ["g_GMC (vol·h⁻¹)", ""],
-      k_star: ["k_star (h⁻¹)", ""],
-      alpha: ["α (–)", "growth exponent"],
+      nb_vol: ["nb_vol (μM³)", "initial NB volume (V0)"],
+      n: ["n (–)", "sat-power exponent"],
+      k_max_GMC: ["k_max_GMC (h⁻¹)", "max GMC division"],
+      V_thresh_base: ["V_thresh_base (μM³)", "baseline NB threshold"],
+      V_thresh_GMC: ["V_thresh_GMC (μM³)", "GMC threshold"],
+      V_floor_NB: ["V_floor_NB (μM³)", "NB division floor"],
+      V_floor_GMC: ["V_floor_GMC (μM³)", "GMC division floor"],
+      k_Neuron: ["k_Neuron (h⁻¹)", "Im→Mat neuron maturation rate"],
+      g_GMC: ["g_GMC (μM³·h⁻¹)", "GMC growth rate"],
+      k_star: ["k_star (h⁻¹)", "WT NB division rate @ V0"],
+      delta_thresh: ["delta_thresh (μM³)", "threshold pull per sym div"],
+      V_thresh_min: ["V_thresh_min (μM³)", "lower bound"],
     },
   },
   4: {
-    title: "Model 4 — vol-scaled + sym-threshold",
+    title: "Model 3 — volume-scaled growth (static thresholds)",
     fields: {
       tEnd: ["tEnd (h)", ""],
-      nb_vol: ["nb_vol (V0)", "V_ref = V0"],
-      n: ["n (–)", ""],
-      k_max_GMC: ["k_max_GMC (h⁻¹)", ""],
-      V_thresh_GMC: ["V_thresh_GMC", ""],
-      V_floor_NB: ["V_floor_NB", ""],
-      V_floor_GMC: ["V_floor_GMC", ""],
-      k_Neuron: ["k_Neuron (h⁻¹)", ""],
-      g_GMC: ["g_GMC (vol·h⁻¹)", ""],
-      k_star: ["k_star (h⁻¹)", ""],
-      alpha: ["α (–)", "growth exponent"],
-      V_thresh_base: ["V_thresh_base", ""],
-      delta_thresh: ["delta_thresh (vol)", "pull/Σsym"],
-      V_thresh_min: ["V_thresh_min (vol)", "lower bound"],
+      nb_vol: ["nb_vol (μM³)", "V_ref = V0"],
+      n: ["n (–)", "sat-power exponent"],
+      k_max_GMC: ["k_max_GMC (h⁻¹)", "max GMC division"],
+      V_thresh_NB: ["V_thresh_NB (μM³)", "NB threshold"],
+      V_thresh_GMC: ["V_thresh_GMC (μM³)", "GMC threshold"],
+      V_floor_NB: ["V_floor_NB (μM³)", "NB division floor"],
+      V_floor_GMC: ["V_floor_GMC (μM³)", "GMC division floor"],
+      k_Neuron: ["k_Neuron (h⁻¹)", "Im→Mat neuron maturation rate"],
+      g_GMC: ["g_GMC (μM³·h⁻¹)", "GMC growth rate"],
+      k_star: ["k_star (h⁻¹)", "WT NB division rate @ V0"],
+      alpha: ["α (–)", "growth-volume exponent"],
     },
   },
   5: {
-    title: "Model 5 — NB self-repression",
+    title: "Model 4 — vol-scaled growth + sym-threshold pull",
     fields: {
       tEnd: ["tEnd (h)", ""],
-      k_Neuron: ["k_Neuron (h⁻¹)", ""],
+      nb_vol: ["nb_vol (μM³)", "V_ref = V0"],
+      n: ["n (–)", "sat-power exponent"],
+      k_max_GMC: ["k_max_GMC (h⁻¹)", "max GMC division"],
+      V_thresh_GMC: ["V_thresh_GMC (μM³)", "GMC threshold"],
+      V_floor_NB: ["V_floor_NB (μM³)", "NB division floor"],
+      V_floor_GMC: ["V_floor_GMC (μM³)", "GMC division floor"],
+      k_Neuron: ["k_Neuron (h⁻¹)", "Im→Mat neuron maturation rate"],
+      g_GMC: ["g_GMC (μM³·h⁻¹)", "GMC growth rate"],
+      k_star: ["k_star (h⁻¹)", "WT NB division rate @ V0"],
+      alpha: ["α (–)", "growth-volume exponent"],
+      V_thresh_base: ["V_thresh_base (μM³)", "baseline NB threshold"],
+      delta_thresh: ["delta_thresh (μM³)", "threshold pull per sym div"],
+      V_thresh_min: ["V_thresh_min (μM³)", "lower bound"],
+    },
+  },
+  6: {
+    title: "Model 5 — NB self-repression (Hill form, counts-only)",
+    fields: {
+      tEnd: ["tEnd (h)", ""],
+      k_Neuron: ["k_Neuron (h⁻¹)", "Im→Mat neuron maturation rate"],
       k_max_GMC: ["k_GMC (h⁻¹)", "GMC division"],
-      k_star: ["k_star (h⁻¹)", "base NB division"],
-      K_self: ["K_self (cells)", "repression scale"],
-      beta: ["β (–)", "division exponent"],
+      k_star: ["k_star (h⁻¹)", "base NB div (WT @ start)"],
+      K_self: ["K_self (cells)", "half-max repression scale"],
+      beta: ["β (–)", "repression steepness (Hill)"],
     },
   },
 };
@@ -221,68 +239,162 @@ const MODEL_INFO = {
       GMC divisions transfer volume to Im neurons; Im maturation transfers to Mat.
     </p>
 
-    <h4>Calibration & genotypes</h4>
+<h4>Calibration & Genotypes</h4>
+<p>
+  In this model, the <strong>division rate of neuroblasts</strong> is set indirectly through the parameter 
+  <code>k_star</code>, which represents the expected division rate of a WT neuroblast at its 
+  <em>initial average volume</em> (<code>nb_vol</code>).
+</p>
+
+<ul>
+  <li><strong>Calibrating division rates:</strong>
+  When you choose a value of <code>k_star</code>, the model sets
+  $$k_{\\max}^{\\mathrm{NB}}
+    = \\frac{k_{\\star}}{\\min\\!\\left(1,\\left(\\tfrac{V_0}{V_{\\mathrm{th}}^{\\mathrm{NB}}}\\right)^{n}\\right)}$$
+  so that
+  $$k_{\\mathrm{NB}}(\\bar V_{\\mathrm{NB}}=V_0)=k_{\\star}.$$
+  The default is $k_{\\star}=1/1.5\\;\\mathrm{h}^{-1}$ (a 1.5-hour average cycle).
+  Essentially, $k^{\\mathrm{NB}}_{\\mathrm{max}}$ is calculated to keep the NB volume constant in WT simulations, given the NB's initial volume, the NB's division threshold, and the user-specified intended WT division rate <code>k_star</code>.
+</li>
+
+  <li>
+    <strong>Mutant genotypes:</strong>
     <ul>
-      <li><strong>WT NB division at initial volume:</strong> we set $k_{\\star}=$ the rate we expect WT NBs to maintain throught the simulation and calibrate
-          $k_{\\max}^{\\mathrm{NB}}$ so that $k_{\\mathrm{NB}}(\\bar V_{\\mathrm{NB}}=V_0)=k_{\\star}$.</li>
-      <li><strong>Constant NB growth:</strong> $g_{\\mathrm{NB}}=0.2\\,k_{\\star}\\,V_0$ so WT maintains $\\bar V_{\\mathrm{NB}}\\approx V_0$.</li>
-      <li><strong>symmetry:</strong> WT uses $\\text{sym\\_frac}=0.0$; mud and nanobody use $0.15$.</li>
-      <li><strong>Nanobody growth reduction:</strong> $g_{\\mathrm{NB}}$ is scaled to $0.8\\times$ WT.</li>
+      <li>WT: <code>sym_frac</code> = 0</li>
+      <li>mud mutant: <code>sym_frac</code> = 0.15</li>
+      <li>nanobody: <code>sym_frac</code> = 0.15</li>
+      <li>Nanobody NBs have reduced growth (80 % of WT)
     </ul>
+  </li>
+</ul>
   `,
   },
   3: {
-    title: "Model 3 — vol-scaled growth",
+    title: "Model 2 — sym-division–pulled NB threshold (no recovery)",
     before: `
-      NB growth rate scales with average NB volume relative to initial ($V_0$)
-      using an exponent $\\alpha$; division thresholds remain static.
-      <p class="equation">
-      $$
-      g_{NB}^{eff} = g_{NB}^{base} \\cdot \\left( \\frac{\\bar V_{NB}}{V_0} \\right)^{\\alpha}
-      $$
-      $$
-      k_{NB} = k_{\\max}^{NB} \\cdot \\left( \\frac{\\bar V_{NB}}{V_{th}^{NB}} \\right)^n
-      $$
-      </p>
+    <p>
+      Model 2 extends <em>Model 1</em> by letting the NB division threshold
+      <strong>decrease each time a symmetric NB division occurs</strong>, with no recovery back to baseline.
+      NB growth remains constant (not volume-sensitive).
+    </p>
+
+    <h4>Model Species</h4>
+    <ul>
+      <li><strong>$N_{\\mathrm{NB}}, V_{\\mathrm{NB}}$</strong> — NB count and total NB volume</li>
+      <li><strong>$N_{\\mathrm{GMC}}, V_{\\mathrm{GMC}}$</strong> — GMC count and total GMC volume</li>
+      <li><strong>$N_{\\mathrm{Im}}, V_{\\mathrm{Im}}$</strong> — immature neuron count and total volume</li>
+      <li><strong>$N_{\\mathrm{Mat}}, V_{\\mathrm{Mat}}$</strong> — mature neuron count and total volume</li>
+      <li><strong>$V_{\\mathrm{th}}^{\\mathrm{eff}}$</strong> — effective NB division threshold (state)</li>
+    </ul>
+
+    <h4>Division & Growth</h4>
+    <p>NB and GMC division rates still follow the saturating power-law of average volume (as in Model 1), with floors:</p>
+    $$
+      k_{\\mathrm{NB}}(t) =
+      k_{\\max}^{\\mathrm{NB}}\\,\\min\\!\\left(1,\\Big(\\tfrac{\\bar V_{\\mathrm{NB}}}{V_{\\mathrm{th}}^{\\mathrm{eff}}}\\Big)^{n}\\right),
+      \\quad
+      k_{\\mathrm{GMC}}(t) =
+      k_{\\max}^{\\mathrm{GMC}}\\,\\min\\!\\left(1,\\Big(\\tfrac{\\bar V_{\\mathrm{GMC}}}{V_{\\mathrm{th}}^{\\mathrm{GMC}}}\\Big)^{n}\\right).
+    $$
+    <p>NB growth rate is constant at $g_{\\mathrm{NB}}=g_{\\mathrm{NB}}^{\\mathrm{base}}$.</p>
+
+    <h4>Sym-division threshold pull (no recovery)</h4>
+    $$
+      \\frac{d V_{\\mathrm{th}}^{\\mathrm{eff}}}{dt} = -\\Delta_{\\mathrm{th}}\\,\\underbrace{\\big(\\text{sym\\_frac}\\,k_{\\mathrm{NB}}\\,N_{\\mathrm{NB}}\\big)}_{\\text{symmetric NB divisions per hour}},
+      \\quad V_{\\mathrm{th}}^{\\mathrm{eff}} \\ge V_{\\mathrm{th}}^{\\min}.
+    $$
+
+    <h4>Calibration & Genotypes</h4>
+    <ul>
+      <li><strong>$k_{\\star}$ → $k_{\\max}^{\\mathrm{NB}}$:</strong>
+        $k_{\\max}^{\\mathrm{NB}}$ is calibrated so that $k_{\\mathrm{NB}}(\\bar V_{\\mathrm{NB}}=V_0)=k_{\\star}$ (WT at the start).
+      </li>
+      <li><strong>NB growth:</strong> WT growth is set to $g_{\\mathrm{NB}}^{\\mathrm{base}}=0.2\\,k_{\\star}V_0$; nanobody growth is scaled to 80% of WT.</li>
+      <li><strong>Genotypes:</strong> WT = 0% symmetric; mud = 15%; nanobody = 15% + reduced growth.</li>
+    </ul>
     `,
   },
+
   4: {
-    title: "Model 4 — vol-scaled + sym-threshold",
+    title: "Model 3 — volume-scaled NB growth (static thresholds)",
     before: `
-      Combines vol-scaled NB growth (as in M3) with dynamic threshold lowering
-      from cumulative symmetric divisions (as in M2).
-      <p class="equation">
-      $$
-      V_{th}^{eff}(t) = \\max\\big(V_{th}^{base} - \\Delta_{th} \\cdot S_{sym}(t),\\, V_{th}^{min}\\big)
-      $$
-      $$
-      g_{NB}^{eff} = g_{NB}^{base} \\cdot \\left( \\frac{\\bar V_{NB}}{V_0} \\right)^{\\alpha}
-      $$
-      $$
-      k_{NB} = k_{\\max}^{NB} \\cdot \\left( \\frac{\\bar V_{NB}}{V_{th}^{eff}} \\right)^n
-      $$
-      </p>
+    <p>
+      Model 3 keeps the <em>static</em> division thresholds but makes NB growth
+      <strong>volume-sensitive</strong> relative to the initial average volume $V_0$:
+    </p>
+    $$
+      g_{\\mathrm{NB}}^{\\mathrm{eff}}(t)
+      = g_{\\mathrm{NB}}^{\\mathrm{base}}\\left(\\frac{\\bar V_{\\mathrm{NB}}}{V_0}\\right)^{\\alpha},
+      \\qquad \\alpha \\ge 0.
+    $$
+    <p>
+      Division rates remain the same sat-power forms as Model 1 (with floors). Larger $\\alpha$
+      suppresses growth more strongly when NBs are small and accelerates it when they are large.
+    </p>
+    <h4>Calibration & Genotypes</h4>
+    <ul>
+      <li>$k_{\\max}^{\\mathrm{NB}}$ calibrated from $k_{\\star}$ at $V_0$ (WT start).</li>
+      <li>$g_{\\mathrm{NB}}^{\\mathrm{base}} = 0.2\\,k_{\\star}V_0$; nanobody growth = 0.8× WT.</li>
+    </ul>
     `,
   },
+
   5: {
-    title: "Model 5 — NB self-repression",
+    title: "Model 4 — volume-scaled growth + sym-pulled threshold",
     before: `
-      NB division rate is repressed by NB count (Hill form).
-      No volumes here; focuses on count-level negative feedback.
-      <p class="equation">
-      $$
-      k_{NB}^{eff}(N_{NB}) =
-      k_{NB}^{max} \\cdot
-      \\frac{K^\\beta}{K^\\beta + N_{NB}^\\beta}
-      $$
-      </p>
+    <p>
+      Model 4 combines Model 3’s volume-scaled NB growth with a <em>cumulative</em> symmetric-division pull
+      on the NB division threshold (like Model 2 but written with an accumulator $S_{\\mathrm{sym}}$):
+    </p>
+    $$
+      g_{\\mathrm{NB}}^{\\mathrm{eff}} = g_{\\mathrm{NB}}^{\\mathrm{base}}\\left(\\frac{\\bar V_{\\mathrm{NB}}}{V_0}\\right)^{\\alpha},
+      \\qquad
+      V_{\\mathrm{th}}^{\\mathrm{eff}}(t) = \\max\\big(V_{\\mathrm{th}}^{\\mathrm{base}} - \\Delta_{\\mathrm{th}}\\,S_{\\mathrm{sym}}(t),\\,V_{\\mathrm{th}}^{\\min}\\big),
+      \\qquad
+      \\frac{dS_{\\mathrm{sym}}}{dt}=\\text{sym\\_frac}\\,k_{\\mathrm{NB}}N_{\\mathrm{NB}}.
+    $$
+    <p>Division rates use $V_{\\mathrm{th}}^{\\mathrm{eff}}$ as in Model 2.</p>
+    <h4>Calibration & Genotypes</h4>
+    <ul>
+      <li>$k_{\\max}^{\\mathrm{NB}}$ from $k_{\\star}$ at $V_0$ (WT start).</li>
+      <li>$g_{\\mathrm{NB}}^{\\mathrm{base}} = 0.2\\,k_{\\star}V_0$; nanobody growth = 0.8× WT.</li>
+    </ul>
+    `,
+  },
+
+  6: {
+    title: "Model 5 — NB self-repression (Hill form, counts-only)",
+    before: `
+    <p>
+      Model 5 returns to counts only and applies <strong>negative feedback</strong> on NB division based on
+      the current NB count:
+    </p>
+    $$
+      k_{\\mathrm{NB}}^{\\mathrm{eff}}(N_{\\mathrm{NB}}) =
+      k_{\\mathrm{NB}}^{\\max}\\,\\frac{K^{\\beta}}{K^{\\beta} + N_{\\mathrm{NB}}^{\\beta}},
+      \\qquad \\beta \\ge 1.
+    $$
+    <p>
+      Higher $\\beta$ produces more switch-like repression once $N_{\\
+      mathrm{NB}}$ exceeds the scale $K$.
+      GMC division and neuron maturation are as in the Base Model.
+    </p>
     `,
   },
 };
 
+function getRowShortTitle(r) {
+  // Prefer the schema title (already defined per row)
+  const full = MODEL_SCHEMAS?.[r]?.title || (r === 1 ? "Base Model" : `Model ${r}`);
+  // Use text before an em dash for concise headers, e.g. "Model 3 — vol-scaled growth" → "Model 3"
+  const cut = full.split("—")[0].trim();
+  return cut || full;
+}
+
+
 /* ---------------- Build per-model state from defaults ---------------- */
-const state = { 1: {}, 2: {}, 3: {}, 4: {}, 5: {} };
-for (const r of [1, 2, 3, 4, 5]) {
+const state = { 1: {}, 2: {}, 3: {}, 4: {}, 5: {}, 6: {} };
+for (const r of [1, 2, 3, 4, 5, 6]) {
   for (const k of Object.keys(MODEL_SCHEMAS[r].fields))
     state[r][k] = DEFAULTS[k];
 }
@@ -614,6 +726,67 @@ function rhsM1_volSat(t, y, p) {
   return [dN_NB, dV_NB, dN_GMC, dV_GMC, dN_Im, dV_Im, dN_Mat, dV_Mat];
 }
 
+// ==== Model 2 — sym divisions pull NB threshold down; no recovery; constant NB growth ====
+function rhsM2_symPull_noRecovery(t, y, p) {
+  // y = [N_NB, V_NB, N_GMC, V_GMC, N_Im, V_Im, N_Mat, V_Mat, Vth_eff]
+  let [N_NB, V_NB, N_GMC, V_GMC, N_Im, V_Im, N_Mat, V_Mat, Vth_eff] = y;
+  const {
+    g_NB_base,
+    g_GMC,
+    k_Neuron,
+    sym_frac,
+    V_thresh_base,
+    V_thresh_GMC,
+    k_max_NB,
+    k_max_GMC,
+    n,
+    V_floor_NB,
+    V_floor_GMC,
+    delta_thresh,
+    V_thresh_min,
+  } = p;
+
+  const Vavg_NB = N_NB > 0 ? V_NB / N_NB : 0;
+  const Vavg_GMC = N_GMC > 0 ? V_GMC / N_GMC : 0;
+  const Vavg_Im = N_Im > 0 ? V_Im / N_Im : 0;
+
+  // Effective NB threshold is the clamped state value Vth_eff
+  const Vth_used = Math.max(Vth_eff, V_thresh_min ?? -Infinity);
+
+  const k_NB =
+    N_NB > 0 && Vavg_NB >= V_floor_NB
+      ? satpow(Vavg_NB, Vth_used, k_max_NB, n)
+      : 0;
+  const k_GMC =
+    N_GMC > 0 && Vavg_GMC >= V_floor_GMC
+      ? satpow(Vavg_GMC, V_thresh_GMC, k_max_GMC, n)
+      : 0;
+
+  const sym_divs = sym_frac * k_NB * N_NB;
+  const asym_divs = (1 - sym_frac) * k_NB * N_NB;
+
+  const dN_NB = sym_divs;
+  const dV_NB = g_NB_base * N_NB - 0.2 * asym_divs * (Vavg_NB || 0);
+
+  const dN_GMC = asym_divs - k_GMC * N_GMC;
+  const dV_GMC =
+    g_GMC * N_GMC +
+    0.2 * asym_divs * (Vavg_NB || 0) -
+    k_GMC * N_GMC * (Vavg_GMC || 0);
+
+  const dN_Im = 2 * k_GMC * N_GMC - k_Neuron * N_Im;
+  const dV_Im =
+    k_GMC * N_GMC * (Vavg_GMC || 0) - k_Neuron * N_Im * (Vavg_Im || 0);
+
+  const dN_Mat = k_Neuron * N_Im;
+  const dV_Mat = k_Neuron * N_Im * (Vavg_Im || 0);
+
+  // No recovery: Vth_eff is pulled down by symmetric divisions
+  const dVth_eff = -delta_thresh * sym_divs;
+
+  return [dN_NB, dV_NB, dN_GMC, dV_GMC, dN_Im, dV_Im, dN_Mat, dV_Mat, dVth_eff];
+}
+
 // M3
 function rhsM3(t, y, p) {
   let [N_NB, V_NB, N_GMC, V_GMC, N_Im, V_Im, N_Mat, V_Mat] = y;
@@ -749,22 +922,22 @@ function solveRow(rowIdx, geno) {
   const p = state[rowIdx];
 
   if (rowIdx === 1) {
-    // Model 1 uses direct k_NB and k_GMC parameters, count-based only
+    // Base model (counts only)
     const args = {
       k_NB: p.k_NB,
       k_GMC: p.k_GMC,
       k_Neuron: p.k_Neuron,
       sym_frac,
     };
-    const y0 = [1, 0, 0, 0]; // [N_NB, N_GMC, N_Im, N_Mat]
+    const y0 = [1, 0, 0, 0];
     return integrate(rhsMBase, y0, args, p.tEnd, p.dt || DEFAULTS.dt);
   }
 
   if (rowIdx === 2) {
-    // New Model 1: static thresholds, constant NB growth, sat-power division vs avg volume
-    const { V0, k_max_NB, g_NB_WT } = derive_kmax_gNB(p); // uses k_star, V_thresh_NB, n
+    // Model 1 — static thresholds, constant NB growth
+    const { V0, k_max_NB, g_NB_WT } = derive_kmax_gNB(p);
     const args = {
-      g_NB: g_NB_WT * g_scale, // WT and mud=1.0; nanobody=0.8 (GENOS)
+      g_NB: g_NB_WT * g_scale,
       g_GMC: p.g_GMC,
       k_Neuron: p.k_Neuron,
       sym_frac,
@@ -776,11 +949,40 @@ function solveRow(rowIdx, geno) {
       V_floor_NB: p.V_floor_NB,
       V_floor_GMC: p.V_floor_GMC,
     };
-    const y0 = [1, V0, 0, 0, 0, 0, 0, 0]; // 8-state (no Vth_eff)
+    const y0 = [1, V0, 0, 0, 0, 0, 0, 0];
     return integrate(rhsM1_volSat, y0, args, p.tEnd, p.dt || DEFAULTS.dt);
   }
 
   if (rowIdx === 3) {
+    // Model 2 — sym divisions pull NB threshold; no recovery
+    const { V0, k_max_NB, g_NB_WT } = derive_kmax_gNB(p);
+    const args = {
+      g_NB_base: g_NB_WT * g_scale,
+      g_GMC: p.g_GMC,
+      k_Neuron: p.k_Neuron,
+      sym_frac,
+      V_thresh_base: p.V_thresh_base, // NB baseline threshold
+      V_thresh_GMC: p.V_thresh_GMC,
+      k_max_NB,
+      k_max_GMC: p.k_max_GMC,
+      n: p.n,
+      V_floor_NB: p.V_floor_NB,
+      V_floor_GMC: p.V_floor_GMC,
+      delta_thresh: p.delta_thresh,
+      V_thresh_min: p.V_thresh_min,
+    };
+    const y0 = [1, V0, 0, 0, 0, 0, 0, 0, p.V_thresh_base]; // include Vth_eff
+    return integrate(
+      rhsM2_symPull_noRecovery,
+      y0,
+      args,
+      p.tEnd,
+      p.dt || DEFAULTS.dt
+    );
+  }
+
+  if (rowIdx === 4) {
+    // Model 3 — vol-scaled growth, static thresholds
     const { V0, k_max_NB, g_NB_WT } = derive_kmax_gNB(p);
     const args = {
       g_NB_base: g_NB_WT * g_scale,
@@ -801,7 +1003,8 @@ function solveRow(rowIdx, geno) {
     return integrate(rhsM3, y0, args, p.tEnd, p.dt || DEFAULTS.dt);
   }
 
-  if (rowIdx === 4) {
+  if (rowIdx === 5) {
+    // Model 4 — vol-scaled growth + sym-pulled threshold
     const { V0, k_max_NB, g_NB_WT } = derive_kmax_gNB(p);
     const args = {
       g_NB_base: g_NB_WT * g_scale,
@@ -820,11 +1023,12 @@ function solveRow(rowIdx, geno) {
       delta_thresh: p.delta_thresh,
       V_thresh_min: p.V_thresh_min,
     };
-    const y0 = [1, V0, 0, 0, 0, 0, 0, 0, 0];
+    const y0 = [1, V0, 0, 0, 0, 0, 0, 0, 0]; // includes S_sym
     return integrate(rhsM4, y0, args, p.tEnd, p.dt || DEFAULTS.dt);
   }
 
-  if (rowIdx === 5) {
+  if (rowIdx === 6) {
+    // Model 5 — NB self-repression (counts only)
     const k_NB_max =
       p.k_star *
       ((Math.pow(p.K_self, p.beta) + 1) / Math.pow(p.K_self, p.beta));
@@ -881,8 +1085,8 @@ function plotRow(r) {
       Mat = [];
     for (let i = 0; i < t.length; i++) {
       const y = sol.y[i];
-      if (r === 1 || r === 5) {
-        // Model 1 and 5: [N_NB, N_GMC, N_Im, N_Mat]
+      if (r === 1 || r === 6) {
+        // Base Model and Model 5: [N_NB, N_GMC, N_Im, N_Mat]
         NB.push(y[0]);
         GMC.push(y[1]);
         Im.push(y[2]);
@@ -1061,7 +1265,7 @@ function buildModels() {
 
   const names = ["WT", "mud mutant", "nanobody"];
 
-  for (let r = 1; r <= 5; r++) {
+  for (let r = 1; r <= 6; r++) {
     // BEFORE info (full width)
     const before = document.createElement("div");
     before.className = "info full";
@@ -1144,7 +1348,7 @@ function buildModels() {
       cell.dataset.row = r;
       cell.dataset.col = c;
       const h3 = document.createElement("h3");
-      const rowLabel = r === 1 ? "Base Model" : `Model ${r}`;
+      const rowLabel = getRowShortTitle(r);
       h3.textContent = `${rowLabel} • ${names[c - 1]}`;
       cell.appendChild(h3);
       const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
@@ -1190,8 +1394,8 @@ function summarizeRow(r) {
     const sol = solveRow(r, GENOS[c - 1]);
     const t = sol.t;
     let NB, GMC, Im, Mat;
-    if (r === 1 || r === 5) {
-      // Model 1 and 5: [N_NB, N_GMC, N_Im, N_Mat]
+    if (r === 1 || r === 6) {
+      // Base model and model 5: [N_NB, N_GMC, N_Im, N_Mat]
       const y = sol.y.at(-1);
       NB = y[0];
       GMC = y[1];
@@ -1212,7 +1416,7 @@ function summarizeRow(r) {
 
 function shareAll() {
   const sp = new URLSearchParams();
-  for (const r of [1, 2, 3, 4, 5]) {
+  for (const r of [1, 2, 3, 4, 5, 6]) {
     readModelInputs(r);
     Object.entries(state[r]).forEach(([k, v]) =>
       sp.set(`m${r}_${k}`, String(v))
@@ -1244,8 +1448,8 @@ function loadFromURL() {
       if (!Number.isNaN(num)) state[r][key] = num;
     }
   }
-  for (const r of [1, 2, 3, 4, 5]) writeModelInputs(r);
-  for (const r of [1, 2, 3, 4, 5]) plotRow(r);
+  for (const r of [1, 2, 3, 4, 5, 6]) writeModelInputs(r);
+  for (const r of [1, 2, 3, 4, 5, 6]) plotRow(r);
 }
 
 /* ---------------- Boot ---------------- */
@@ -1260,7 +1464,7 @@ qsa("button[data-share]").forEach((b) =>
   b.addEventListener("click", () => shareRow(+b.dataset.share))
 );
 qs("#resetAll").addEventListener("click", () => {
-  for (const r of [1, 2, 3, 4, 5]) {
+  for (const r of [1, 2, 3, 4, 5, 6]) {
     for (const k of Object.keys(MODEL_SCHEMAS[r].fields))
       state[r][k] = DEFAULTS[k];
     qsa(`input[data-model="${r}"]`).forEach((inp) => {
