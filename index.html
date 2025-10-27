@@ -1,174 +1,345 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <title>Neuroblast Models — Interactive (per-model params)</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link rel="icon" type="image/svg+xml"
-    href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ccircle cx='5' cy='5' r='3' fill='%231b9e77'/%3E%3Ccircle cx='11' cy='5' r='3' fill='%23d95f02'/%3E%3Ccircle cx='5' cy='11' r='3' fill='%237570b3'/%3E%3Ccircle cx='11' cy='11' r='3' fill='%23e7298a'/%3E%3C/svg%3E">
+  <head>
+    <meta charset="utf-8" />
+    <title>Neuroblast Models — Interactive (per-model params)</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link
+      rel="icon"
+      type="image/svg+xml"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ccircle cx='5' cy='5' r='3' fill='%231b9e77'/%3E%3Ccircle cx='11' cy='5' r='3' fill='%23d95f02'/%3E%3Ccircle cx='5' cy='11' r='3' fill='%237570b3'/%3E%3Ccircle cx='11' cy='11' r='3' fill='%23e7298a'/%3E%3C/svg%3E"
+    />
 
-  <!-- KaTeX CSS -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
-  <!-- KaTeX JS -->
-  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
-  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+    <!-- KaTeX CSS -->
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css"
+    />
+    <!-- KaTeX JS -->
+    <script
+      defer
+      src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"
+    ></script>
+    <script
+      defer
+      src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"
+    ></script>
 
-  <style>
-    :root{
-      --bg:#0f1115; --panel:#151925; --ink:#eef2ff; --muted:#9aa4b2;
-      --nb:#1b9e77; --gmc:#d95f02; --im:#7570b3; --mat:#e7298a;
-      --accent:#3b82f6; --border:#253049;
-    }
-    *{box-sizing:border-box}
-    body{
-      margin:0;
-      font:14px/1.45 system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial;
-      color:var(--ink);
-      background:linear-gradient(180deg,#0e1116,#0b0e14);
-    }
-    header{
-      padding:18px 22px; border-bottom:1px solid var(--border);
-      display:flex; gap:16px; align-items:center; justify-content:space-between;
-    }
-    header h1{margin:0; font-size:18px; font-weight:600}
-    header .actions{display:flex; gap:8px; align-items:center}
-    button{
-      background:var(--accent); color:white; border:none; padding:8px 12px;
-      border-radius:10px; cursor:pointer; font-weight:600;
-      box-shadow:0 5px 20px rgba(59,130,246,.25);
-    }
-    button.secondary{background:#1f2937; color:#e5e7eb; box-shadow:none; border:1px solid var(--border);}
+    <style>
+      :root {
+        --bg: #0f1115;
+        --panel: #151925;
+        --ink: #eef2ff;
+        --muted: #9aa4b2;
+        --nb: #1b9e77;
+        --gmc: #d95f02;
+        --im: #7570b3;
+        --mat: #e7298a;
+        --accent: #3b82f6;
+        --border: #253049;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        font: 14px/1.45 system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial;
+        color: var(--ink);
+        background: linear-gradient(180deg, #0e1116, #0b0e14);
+      }
+      header {
+        padding: 18px 22px;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        gap: 16px;
+        align-items: center;
+        justify-content: space-between;
+      }
+      header h1 {
+        margin: 0;
+        font-size: 18px;
+        font-weight: 600;
+      }
+      header .actions {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+      }
+      button {
+        background: var(--accent);
+        color: white;
+        border: none;
+        padding: 8px 12px;
+        border-radius: 10px;
+        cursor: pointer;
+        font-weight: 600;
+        box-shadow: 0 5px 20px rgba(59, 130, 246, 0.25);
+      }
+      button.secondary {
+        background: #1f2937;
+        color: #e5e7eb;
+        box-shadow: none;
+        border: 1px solid var(--border);
+      }
 
-    main{padding:18px; display:block;}
+      main {
+        padding: 18px;
+        display: block;
+      }
 
-    .grid{
-      display:grid;
-      grid-template-columns: repeat(3, 1fr);
-      grid-auto-rows: minmax(230px, auto);
-      gap:12px;
-    }
-    .full{ grid-column: 1 / -1; }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        grid-auto-rows: auto;
+        gap: 12px;
+      }
+      .full {
+        grid-column: 1 / -1;
+      }
 
-    .legend{
-      display:flex; gap:14px; align-items:center; color:var(--muted);
-      font-size:12px; padding:6px 0 10px;
-    }
-    .chip{display:inline-flex; gap:6px; align-items:center}
-    .dot{width:12px; height:4px; border-radius:2px; background:currentColor}
-    .badge{display:inline-block; padding:2px 6px; border-radius:8px; background:#0b1222; border:1px solid var(--border);
-      font-size:11px; color:#cbd5e1; font-weight:600;}
+      .legend {
+        display: flex;
+        gap: 14px;
+        align-items: center;
+        justify-content: center;
+        color: var(--muted);
+        font-size: 12px;
+        padding: 8px 12px;
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        grid-column: 1 / -1;
+      }
+      .chip {
+        display: inline-flex;
+        gap: 6px;
+        align-items: center;
+      }
+      .dot {
+        width: 12px;
+        height: 4px;
+        border-radius: 2px;
+        background: currentColor;
+      }
+      .badge {
+        display: inline-block;
+        padding: 2px 6px;
+        border-radius: 8px;
+        background: #0b1222;
+        border: 1px solid var(--border);
+        font-size: 11px;
+        color: #cbd5e1;
+        font-weight: 600;
+      }
 
-    .cell{
-      background:var(--panel); border:1px solid var(--border); border-radius:14px;
-      padding:10px; position:relative; overflow:hidden;
-    }
-    .cell h3{
-      position:absolute; top:6px; left:10px; margin:0; font-size:12px; color:var(--muted); font-weight:600;
-    }
-    svg{width:100%; height:100%;}
+      .cell {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 10px;
+        position: relative;
+        overflow: hidden;
+      }
+      .cell h3 {
+        position: absolute;
+        top: 6px;
+        left: 10px;
+        margin: 0;
+        font-size: 12px;
+        color: var(--muted);
+        font-weight: 600;
+        color: #f8fafc;
+      }
+      svg {
+        width: 100%;
+        height: 100%;
+      }
 
-    .card{background:var(--panel); border:1px solid var(--border); border-radius:12px; padding:12px; display:flex; flex-direction:column; gap:10px;}
-    .card h3{margin:0; font-size:14px}
-    .fields{display:grid; grid-template-columns: repeat(4, minmax(120px,1fr)); gap:8px}
-    @media (max-width: 900px){ .fields{ grid-template-columns: repeat(2, minmax(120px,1fr)); } }
-    .field{display:flex; flex-direction:column; gap:4px}
-    .field label{font-size:12px; color:var(--muted)}
-    .field input{
-      background:#0c1220; color:var(--ink); border:1px solid var(--border);
-      border-radius:10px; padding:8px 10px; font-weight:600;
-    }
-    .inline{display:flex; gap:8px; align-items:center; justify-content:space-between;}
-    .tiny{font-size:12px; color:var(--muted)}
-    .changes{ display:flex; flex-wrap:wrap; gap:6px; }
-    .chip-sm{
-      font-size:11px; padding:2px 6px; border-radius:8px;
-      background:#0b1222; border:1px solid var(--border); color:#cbd5e1; font-weight:600;
-    }
+      .card {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+      .card h3 {
+        margin: 0;
+        font-size: 14px;
+      }
 
-    .info{
-      background:var(--panel); border:1px solid var(--border);
-      border-radius:14px; padding:12px 14px;
-    }
-    .info h3{ margin:0 0 6px 0; font-size:14px; }
-    .info p{ margin:0; color:var(--muted); font-size:14px; line-height:1.5; }
+      .fields {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(120px, 1fr));
+        gap: 8px;
+      }
+      @media (max-width: 900px) {
+        .fields {
+          grid-template-columns: repeat(2, minmax(120px, 1fr));
+        }
+      }
+      .field {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+      .field label {
+        font-size: 12px;
+        color: var(--muted);
+      }
+      .field input {
+        background: #0c1220;
+        color: var(--ink);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 8px 10px;
+        font-weight: 600;
+      }
+      .inline {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .tiny {
+        font-size: 12px;
+        color: var(--muted);
+      }
+      .changes {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+      .chip-sm {
+        font-size: 11px;
+        padding: 2px 6px;
+        border-radius: 8px;
+        background: #0b1222;
+        border: 1px solid var(--border);
+        color: #cbd5e1;
+        font-weight: 600;
+      }
 
-    /* KaTeX styling - much simpler! */
-    .info .katex { 
-      font-size: 1.15em; /* 16px (1.15 × 14px) - adjust this to make equations bigger/smaller */
-      color: var(--ink);
-    }
-    .info .katex-display {
-      margin: 0.8em 0; /* More space around display equations */
-      text-align: left;
-    }
-    
-    /* Styling for annotated equations */
-    .info h4 {
-      margin: 16px 0 8px 0;
-      font-size: 13px;
-      color: var(--ink);
-      font-weight: 600;
-    }
-    .info ul {
-      margin: 8px 0;
-      padding-left: 20px;
-      color: var(--muted);
-    }
-    .info li {
-      margin: 6px 0;
-      line-height: 1.6;
-    }
-    .info li strong {
-      color: var(--ink);
-    }
-    .info .equation-note {
-      margin: 6px 0 12px 0;
-      color: var(--muted);
-      font-size: 14px;
-      line-height: 1.6;
-    }
-  </style>
-</head>
-<body>
-  <header>
-    <h1>Neuroblast models — interactive grid (per-model parameters)</h1>
-    <div class="actions">
-      <button class="secondary" id="resetAll">Reset all rows to paper defaults</button>
-      <button id="shareAll">Share current setup</button>
-    </div>
-  </header>
+      .info {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 12px 14px;
+      }
+      .info h3 {
+        margin: 0 0 6px 0;
+        font-size: 14px;
+        color: #f8fafc;
+      }
+      .info p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 14px;
+        line-height: 1.5;
+      }
 
-  <main>
-    <section class="full">
-      <div class="legend">
-        <span class="chip" style="color:var(--nb)"><span class="dot"></span> NB</span>
-        <span class="chip" style="color:var(--gmc)"><span class="dot"></span> GMC</span>
-        <span class="chip" style="color:var(--im)"><span class="dot"></span> Im</span>
-        <span class="chip" style="color:var(--mat)"><span class="dot"></span> Mat</span>
-        <span class="badge">Genotypes: WT • mud • nanobody</span>
+      /* KaTeX styling - much simpler! */
+      .info .katex {
+        font-size: 1.15em; /* 16px (1.15 × 14px) - adjust this to make equations bigger/smaller */
+        color: var(--ink);
+      }
+      .info .katex-display {
+        margin: 0.8em 0; /* More space around display equations */
+        text-align: left;
+      }
+
+      /* Styling for annotated equations */
+      .info h4 {
+        margin: 16px 0 8px 0;
+        font-size: 13px;
+        color: var(--ink);
+        font-weight: 600;
+      }
+      .info ul {
+        margin: 8px 0;
+        padding-left: 20px;
+        color: var(--muted);
+      }
+      .info li {
+        margin: 6px 0;
+        line-height: 1.6;
+      }
+      .info li strong {
+        color: var(--ink);
+      }
+      .info .equation-note {
+        margin: 6px 0 12px 0;
+        color: var(--muted);
+        font-size: 14px;
+        line-height: 1.6;
+      }
+      .info.full {
+        background: #0b1222;
+        padding: 1rem 1.5rem;
+        margin-bottom: 1.5rem;
+        border-radius: 8px;
+        color: #0f172a;
+      }
+      .info.full h2 {
+        margin-top: 0;
+        font-size: 1.5rem;
+        color: #f8fafc
+      }
+      .info.full code {
+        background: #0b1222;
+        padding: 2px 5px;
+        border-radius: 4px;
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      }
+      .field input.bad {
+        border-color: #ef4444;
+        box-shadow: 0 0 0 1px #ef4444 inset;
+      }
+      header {
+        position: sticky;
+        top: 0;
+        z-index: 1000;
+        backdrop-filter: blur(6px);
+        background: rgba(
+          11,
+          14,
+          20,
+          0.75
+        ); /* translucent so plots peek through */
+      }
+
+      /*shrink padding on very small screens to keep buttons visible */
+      @media (max-width: 520px) {
+        header {
+          padding: 12px 14px;
+        }
+        header h1 {
+          font-size: 16px;
+        }
+        .actions button {
+          padding: 7px 10px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>Interactive neuroblast lineage models</h1>
+      <div class="actions">
+        <button class="secondary" id="resetAll">
+          Reset all rows to paper defaults
+        </button>
+        <button id="shareAll">Share current setup</button>
       </div>
-      <div id="grid" class="grid"></div>
-    </section>
-  </main>
+    </header>
 
-  <script src="app.js"></script>
-  
-  <!-- Initialize KaTeX auto-render after app.js loads content -->
-  <script>
-    document.addEventListener('DOMContentLoaded', function() {
-      // Wait a bit for app.js to build the DOM
-      setTimeout(() => {
-        renderMathInElement(document.body, {
-          delimiters: [
-            {left: '$$', right: '$$', display: true},
-            {left: '$', right: '$', display: false},
-            {left: '\\(', right: '\\)', display: false},
-            {left: '\\[', right: '\\]', display: true}
-          ],
-          throwOnError: false
-        });
-      }, 100);
-    });
-  </script>
-</body>
+    <main>
+      <section class="full">
+        <div id="grid" class="grid"></div>
+      </section>
+    </main>
+
+    <script defer src="app.js"></script>
+  </body>
 </html>
