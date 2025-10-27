@@ -366,7 +366,7 @@ const MODEL_INFO = {
     title: "Model 5 — NB self-repression (Hill form, counts-only)",
     before: `
     <p>
-      Model 5 returns to counts only and applies <strong>negative feedback</strong> on NB division based on
+      Model 5 returns to counts only (like the Base Model) and applies <strong>negative feedback</strong> on NB division based on
       the current NB count:
     </p>
     $$
@@ -375,10 +375,11 @@ const MODEL_INFO = {
       \\qquad \\beta \\ge 1.
     $$
     <p>
-      Higher $\\beta$ produces more switch-like repression once $N_{\\
-      mathrm{NB}}$ exceeds the scale $K$.
+      Higher $\\beta$ produces more switch-like repression once $N_{\\mathrm{NB}}$ exceeds the scale $K$.
       GMC division and neuron maturation are as in the Base Model.
     </p>
+
+    <p> Mudmutant simulations and nanobody simulations are identical in Model 5 (as was the case in the Base Model) </p>
     `,
   },
 };
@@ -1279,6 +1280,9 @@ function buildModels() {
     const params = document.createElement("div");
     params.className = "card full";
     params.dataset.row = r;
+    params.id = `model-${r}`;
+    params.className = "card full";
+    params.dataset.row = r;
     const h = document.createElement("h3");
     h.textContent = `${MODEL_SCHEMAS[r].title} — parameters`;
     params.appendChild(h);
@@ -1432,7 +1436,7 @@ function shareRow(r) {
   const sp = new URLSearchParams();
   Object.entries(state[r]).forEach(([k, v]) => sp.set(`m${r}_${k}`, String(v)));
   sp.set("row", String(r));
-  const url = `${location.origin}${location.pathname}?${sp.toString()}`;
+  const url = `${location.origin}${location.pathname}?${sp.toString()}#model-${r}`; // 👈 add hash
   navigator.clipboard?.writeText(url);
   alert(`Link for ${r === 1 ? "Base Model" : `Model ${r}`} copied.`);
 }
