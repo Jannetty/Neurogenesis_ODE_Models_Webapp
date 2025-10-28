@@ -7,8 +7,8 @@ const GENOS = [
   ["nanobody", 0.15, 0.8],
 ];
 const COLORS = { NB: "#1b9e77", GMC: "#d95f02", Im: "#7570b3", Mat: "#e7298a" };
-const qs = (s, root = document) => root.querySelector(s);
-const qsa = (s, root = document) => Array.from(root.querySelectorAll(s));
+const qs  = (s, root) => (root || document).querySelector(s);
+const qsa = (s, root) => Array.from((root || document).querySelectorAll(s));
 
 /* ---------------- Plot style (scales all text/lines) ---------------- */
 const PLOT_STYLE = {
