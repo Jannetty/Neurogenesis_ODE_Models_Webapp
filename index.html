@@ -284,7 +284,7 @@
       .info.full h2 {
         margin-top: 0;
         font-size: 1.5rem;
-        color: #f8fafc
+        color: #f8fafc;
       }
       .info.full code {
         background: #0b1222;
@@ -307,6 +307,19 @@
           20,
           0.75
         ); /* translucent so plots peek through */
+      }
+      html {
+        scroll-behavior: smooth;
+      }
+
+      /* declare header height once; adjust if you tweak header sizing */
+      :root {
+        --header-height: 64px;
+      }
+
+      /* ensure anchored model cards leave space under the sticky header */
+      .card.full[id^="model-"] {
+        scroll-margin-top: calc(var(--header-height) + 12px);
       }
 
       /*shrink padding on very small screens to keep buttons visible */

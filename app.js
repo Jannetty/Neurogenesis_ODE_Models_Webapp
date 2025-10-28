@@ -1438,13 +1438,25 @@ function shareRow(r) {
   sp.set("row", String(r));
   const url = `${location.origin}${location.pathname}?${sp.toString()}#model-${r}`; // 👈 add hash
   navigator.clipboard?.writeText(url);
-  alert(`Link for ${r === 1 ? "Base Model" : `Model ${r}`} copied.`);
+  alert(`Link for ${r === 1 ? "Base Model" : `Model ${r-1}`} copied.`);
 }
+
+function scrollToHashIfAny() {
+  if (!location.hash) return;
+  const el = document.querySelector(location.hash);
+  if (!el) return;
+  const header = document.querySelector('header');
+  const offset = (header?.offsetHeight || 0) + 8; // tiny extra padding
+  const y = el.getBoundingClientRect().top + window.pageYOffset - offset;
+  window.scrollTo({ top: y, behavior: 'smooth' });
+}
+
+window.addEventListener('hashchange', scrollToHashIfAny);
 
 function loadFromURL() {
   const u = new URL(location.href);
   for (const [k, v] of u.searchParams.entries()) {
-    const m = k.match(/^m([1-5])_(.+)$/);
+    const m = k.match(/^m([1-6])_(.+)$/);
     if (m) {
       const r = +m[1],
         key = m[2];
@@ -1454,6 +1466,7 @@ function loadFromURL() {
   }
   for (const r of [1, 2, 3, 4, 5, 6]) writeModelInputs(r);
   for (const r of [1, 2, 3, 4, 5, 6]) plotRow(r);
+  requestAnimationFrame(scrollToHashIfAny);
 }
 
 /* ---------------- Boot ---------------- */
