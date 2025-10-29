@@ -324,6 +324,30 @@
         scroll-margin-top: calc(var(--header-height) + 12px);
       }
 
+      /* Shared secondary button + link hover and focus states */
+      button.secondary,
+      header .actions a.secondary {
+        background: #1f2937;
+        color: #e5e7eb;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 8px 12px;
+        font-weight: 600;
+        text-decoration: none;
+        box-shadow: none;
+        cursor: pointer;
+        transition: background 0.15s ease, box-shadow 0.15s ease;
+      }
+
+      /* Highlight on hover/focus for both */
+      button.secondary:hover,
+      button.secondary:focus,
+      header .actions a.secondary:hover,
+      header .actions a.secondary:focus {
+        background: #374151; /* slightly lighter gray highlight */
+        box-shadow: 0 0 0 2px var(--accent); /* thin blue outline for accessibility */
+      }
+
       /*shrink padding on very small screens to keep buttons visible */
       @media (max-width: 520px) {
         header {
@@ -342,6 +366,14 @@
     <header>
       <h1>Interactive neuroblast lineage models</h1>
       <div class="actions">
+        <a
+          class="secondary"
+          href="https://www.biorxiv.org/content/10.1101/2025.09.26.678890v1"
+          target="_blank"
+          rel="noopener"
+        >
+          Read the preprint now on BioRχiv!
+        </a>
         <button class="secondary" id="resetAll">
           Reset all rows to paper defaults
         </button>

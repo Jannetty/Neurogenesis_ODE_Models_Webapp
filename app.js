@@ -1257,7 +1257,6 @@ function buildModels() {
     Adjust <strong>parameters</strong> and click <em>Run model</em> to see how lineage cell counts change.
     Inputs accept <strong>math expressions</strong> (e.g. set neuroblast division rate to one per
     1.5 hours with <code>1/1.5</code>; functions like <code>sqrt(2)</code> and constants like <code>pi</code> also work).
-    Press <strong>Enter</strong> or click outside a field to evaluate—values are shown as numbers (e.g. <code>2/3</code> → <code>0.66666</code>).
   </p>
   <p> Use <em>Reset all rows to paper defaults</em> to restore parameters to values from our paper.  Use <em>Share current setup</em> to copy a link to this webpage with your adjusted parameter values.
   </p>
